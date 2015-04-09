@@ -11,3 +11,7 @@ g++ condition.cc -o condition -lboost_thread-mt -lpthread
 g++ noncopyable.cc -o noncopyable -lboost_thread-mt -lpthread
 
 g++ -Wall -g any_any_cast.cc -o any_any_cast -lboost_thread-mt -lpthread
+
+g++ -Wall -g lexical_cast.cc -o lexical_cast
+
+g++ -Wall -g boost_bind.cc -o boost_bind
