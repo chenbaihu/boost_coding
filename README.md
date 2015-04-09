@@ -17,3 +17,5 @@ g++ -Wall -g lexical_cast.cc -o lexical_cast
 g++ -Wall -g boost_bind.cc -o boost_bind 
 
 g++ -Wall -g boost_bind_ref.cc -o boost_bind_ref
+
+g++ -Wall -g boost_asio_server_async.cc -o boost_asio_server_async -lboost_system-mt
