@@ -1,4 +1,4 @@
-# boost_thread_test
+# boost_coding
 
 g++ thread.cc -o  thread -lboost_thread-mt -lpthread
 
