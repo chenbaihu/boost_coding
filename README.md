@@ -25,6 +25,8 @@ g++ -Wall -g mutex.cc -o mutex -lboost_thread-mt -lpthread
 
 g++ -Wall -g condition.cc -o condition -lboost_thread-mt -lpthread
 
+g++ -Wall -g boost_thread_pool.cc -o boost_thread_pool -lboost_thread-mt -lpthread
+
 # boost asio
 g++ -Wall -g boost_asio_server_async.cc -o boost_asio_server_async -lboost_system-mt
 
