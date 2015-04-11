@@ -6,8 +6,6 @@
     http://jaist.dl.sourceforge.net/project/boost/boost/1.53.0/boost_1_53_0.tar.gz
     http://jaist.dl.sourceforge.net/project/boost/boost/1.53.0/boost_1_53_0.tar.gz
 
-
-
 # boost comment
     g++ -Wall -g noncopyable.cc -o noncopyable
     
@@ -22,6 +20,9 @@
     
     g++ -Wall -g tr1_shared_ptr.cc  -o tr1_shared_ptr
     g++ -Wall -g tr1_shared_ptr_FILE.cc -o tr1_shared_ptr_FILE
+
+    g++ -Wall -g tr1_weak_ptr.cc -o tr1_weak_ptr
+    g++ -Wall -g boost_weak_ptr.cc -o boost_weak_ptr 
     
     g++ -Wall -g boost_scoped_ptr.cc -o boost_scoped_ptr
 
