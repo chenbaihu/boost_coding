@@ -8,6 +8,10 @@ g++ -Wall -g boost_bind.cc -o boost_bind
 g++ -Wall -g boost_bind_ref.cc -o boost_bind_ref
 
 # boost smart pointer
+g++ -Wall -g tr1_shared_ptr.cc  -o tr1_shared_ptr
+g++ -Wall -g tr1_shared_ptr_FILE.cc -o tr1_shared_ptr_FILE
+
+g++ -Wall -g boost_scoped_ptr.cc -o boost_scoped_ptr
 
 # boost container
 g++ -Wall -g boost_intrusive_list.cc -o boost_intrusive_list
