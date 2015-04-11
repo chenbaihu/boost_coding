@@ -49,6 +49,7 @@
     g++ -Wall -g boost_thread_pool.cc -o boost_thread_pool -lboost_thread-mt -lpthread
 
 # multi_process
+    g++ fork_thread_group.cc -o fork_thread_group -lboost_thread-mt -lpthread -lgflags -lglog
 
 # net
     g++ -Wall -g boost_asio_server_async.cc -o boost_asio_server_async -lboost_system-mt
