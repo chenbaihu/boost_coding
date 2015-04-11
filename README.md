@@ -17,7 +17,9 @@
     
     g++ -Wall -g boost_bind_ref.cc -o boost_bind_ref
 
-# boost smart pointer
+# boost smart pointer  
+    Smart Ptr Document: http://www.boost.org/doc/libs/1_53_0/libs/smart_ptr/smart_ptr.htm
+    
     g++ -Wall -g tr1_shared_ptr.cc  -o tr1_shared_ptr
     g++ -Wall -g tr1_shared_ptr_FILE.cc -o tr1_shared_ptr_FILE
     
