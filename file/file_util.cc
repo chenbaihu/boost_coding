@@ -1,41 +1,4 @@
-/*
- *参考博客;
- *    http://technet.microsoft.com/zh-cn/library/44cs32f9(v=vs.80).aspx
- *
- * c++ file stream open type to c open file type
- *
- *r：
- *    ios_base::in becomes "r" (open existing file for reading).
- *w:
- *    ios_base::out or ios_base::out | ios_base::trunc becomes "w" (truncate existing file or create for writing).
- *a：
- *    ios_base::out | app becomes "a" (open existing file for appending all writes).
- *
- *r+:
- *    ios_base::in | ios_base::out becomes "r+" (open existing file for reading and writing).
- *
- *w+:
- *    ios_base::in | ios_base::out | ios_base::trunc becomes "w+" (truncate existing file or create for reading and writing).
- *
- *a+：
- *    ios_base::in | ios_base::out | ios_base::app becomes "a+" (open existing file for reading and for appending all writes).
- * */
-
-#ifndef __FILE_UTIL_H
-#define __FILE_UTIL_H
-
-#include <fstream>
-#include <vector>
-#include <string>
-#include <iostream>
-
-class FileUtil {
-public:
-    static bool GetFileLines(std::string& filename, std::vector<std::string>& file_lines);   
-    static bool GetFileLines(const char* filename, std::vector<std::string>& file_lines);   
-};
-
-#endif
+#include "file_util.h"
 
 bool FileUtil::GetFileLines(std::string& filename, std::vector<std::string>& file_lines)
 {
@@ -67,6 +30,236 @@ bool FileUtil::GetFileLines(const char* filename, std::vector<std::string>& file
     ifs.close();
     return true;
 }
+
+bool FileUtil::CopyFile(const std::string& src, const std::string& dst, std::string& errinfo) 
+{
+    errinfo.resize(1024);
+    return CopyFile(src.c_str(), dst.c_str(), &errinfo[0]);
+}
+
+bool FileUtil::CopyFile(const char * src, const char * dst, char * errbuf)
+{
+    char tmp_dst[256]={0};
+    snprintf(tmp_dst, 253,"%s.tmp",dst);
+
+    time_t r_file_time = GetFileTime(src);
+    if ( 0 == r_file_time ) {
+        snprintf(errbuf,1024,"GetFileTime file[%s] error[%d:%s]", src, errno, strerror(errno));
+        return false;
+    }
+
+    struct timeval tval[2];
+    tval[0].tv_sec = r_file_time;
+    tval[0].tv_usec = 0 ;
+    tval[1].tv_sec = r_file_time;
+    tval[1].tv_usec = 0 ;
+
+    int rfd = open(src, O_RDONLY, 0644);
+    if ( rfd < 0 ) {   
+        snprintf(errbuf, 1024, "open file[%s] for read error[%d:%s]", src, errno, strerror(errno));
+        return false;  
+    }
+
+    int wfd = open(tmp_dst, O_CREAT|O_TRUNC|O_WRONLY|O_LARGEFILE, 0744);
+    if ( wfd < 0) {   
+        snprintf(errbuf, 1024, "open file[%s] for write error[%d:%s]", tmp_dst, errno, strerror(errno));
+        close(rfd);
+        return false;  
+    }
+
+    char buf[4096]={0};
+    int rd_len = -1;
+    int wd_len = -1;
+    bool ret = true;
+
+    while ( (rd_len = Readn(rfd, buf, sizeof(buf))) > 0 ) {
+        wd_len = Writen(wfd, buf, rd_len, 0);
+        if( rd_len != wd_len ) {
+            ret = false;
+            snprintf(errbuf, 1024, "writen file [%s] error[%d:%s]", tmp_dst, errno, strerror(errno));
+            break;
+        }
+    }
+
+    if ( -1 == rd_len ) {
+        ret = false;
+        snprintf(errbuf, 1024, "read file [%s] error[%d:%s]", src, errno, strerror(errno));
+    }
+
+    close(rfd);
+    close(wfd);
+
+    if ( ret ) {
+        if( 0 != utimes(tmp_dst,tval) ) {
+            snprintf(errbuf, 1024, "utimes file[%s] error[%d:%s]\n", tmp_dst, errno, strerror(errno));
+            return false;
+        }
+
+        if( 0 != rename(tmp_dst,dst)) {
+            snprintf(errbuf,1024,"rename file[%s->%s] error[%d:%s]\n",tmp_dst,dst,errno,strerror(errno));
+            return false;
+        } else {
+            return true;
+        } 
+    }
+
+    return ret;
+}
+
+bool FileUtil::FilePutContent(const std::string& filename, void * buf, unsigned int len, std::string& errbuf)
+{
+    errbuf.resize(1024);
+    return FilePutContent(filename.c_str(), buf, len, &errbuf[0]);
+}
+
+bool FileUtil::FilePutContent(const char * filename, void * buf, unsigned int len, char * errbuf)
+{
+    int wfd = open(filename, O_CREAT|O_TRUNC|O_WRONLY|O_LARGEFILE,0644);
+    if( wfd < 0) {   
+        snprintf(errbuf, 1024, "open file[%s] for write error[%d:%s]\n", filename, errno, strerror(errno));
+        return false;  
+    }
+    ssize_t wsize = Writen(wfd, buf, len);  
+    if ( wsize < len ) {
+        snprintf(errbuf, 1024, "write file[%s] num[%zd<%u] fail[%d:%s]\n", filename, wsize, len, errno, strerror(errno));
+
+        close(wfd);
+
+        unlink(filename);
+        return false;  
+    }
+
+    close(wfd);
+    return true;
+}
+
+ssize_t FileUtil::Readn(int fd, void *vptr, size_t n) 
+{
+	size_t	nleft;
+	ssize_t	nread;
+	char	*ptr;
+
+	ptr = (char*)vptr;
+	nleft = n;
+	while (nleft > 0) {
+		if ( (nread = read(fd, ptr, nleft)) < 0) {
+			if (errno == EINTR || errno == EAGAIN) {
+				nread = 0;		/* and call read() again */
+			} else {
+				return(-1);
+			}
+		} else if (nread == 0) {
+			break;				/* EOF */
+		}
+
+		nleft -= nread;
+		ptr   += nread;
+	}
+	return(n - nleft);		/* return >= 0 */
+}
+
+ssize_t FileUtil::Writen(int fd, const void *vptr, size_t n,int sleeptime/*=1000*/) 
+{
+    size_t	nleft;
+    ssize_t	nread;
+    char	*ptr;
+
+    ptr = (char*)vptr;
+    nleft = n;
+    while (nleft > 0) {
+        if ( (nread = write(fd, ptr, nleft)) <= 0) {
+            if (errno == EINTR||errno==EAGAIN) {
+                nread = 0;		/* and call read() again */
+                if ( sleeptime ) {
+                    usleep(sleeptime);
+                }
+            } else {
+                return(-1);
+            }
+        } 
+
+        nleft -= nread;
+        ptr   += nread;
+    }
+    return(n - nleft);		/* return >= 0 */
+}
+
+time_t FileUtil::GetFileTime(const char * filename)
+{
+    if (filename==NULL) {
+        return 0;
+    }
+
+    struct stat statbuf;
+    if( 0 == stat(filename,&statbuf) ) {
+        return  statbuf.st_mtime;
+    }
+    return 0 ;
+}
+
+ino_t FileUtil::GetFileInode(const char * filename)
+{
+    struct stat buf;
+retry:
+    if (0 != stat(filename,&buf) )
+    {   
+        if ( errno == EINTR)
+        {
+            goto retry;
+        }
+        return -1;
+    }
+
+    return buf.st_ino;
+}
+
+ino_t FileUtil::GetFileInode(int fd)
+{
+    struct stat buf;
+retry:
+    if (0 != fstat(fd,&buf) )
+    {    
+        if ( errno == EINTR)
+        {
+            goto retry;
+        }
+        return -1;
+    }
+
+    return buf.st_ino;
+}
+
+off_t FileUtil::GetFileSize(const char * filename)
+{
+    struct stat statbuf;
+
+    if ( 0 == stat(filename,&statbuf))
+    {
+        return statbuf.st_size;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+off_t FileUtil::GetFilePos(int fd)
+{
+    off_t ret;
+retry:
+    ret = lseek(fd,0,SEEK_CUR);
+    if ( (off_t)-1==ret )
+    {   
+        if ( errno == EINTR)
+        {
+            goto retry;
+        }
+        return ret;
+    }
+
+    return ret;
+} 
+
 
 #ifdef _TEST_
 
