@@ -1,4 +1,4 @@
-#include "semop.h"
+#include "sem_op.h"
 
 #include <errno.h>
 #include <stdio.h>
