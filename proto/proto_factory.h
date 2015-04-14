@@ -16,6 +16,7 @@
  *
  * 
  * protobuf反射功能：
+ *    https://github.com/chenshuo/recipes/tree/master/protobuf
  * */
 
 #ifndef __PROTOFACTORY_H
