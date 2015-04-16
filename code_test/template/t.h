@@ -1,3 +1,6 @@
+#ifndef H_TEST_
+#define H_TEST_
+
 template<typename T>
 class Test {
     public:
@@ -6,9 +9,9 @@ class Test {
         int a() { return a_; }
         void set_t(T t);
         T get_t();
-        //void set_t(T t) { t_ = t; };
-        //T get_t() { return t_; };
     private:
         int a_;
         T t_;
 };
+
+#endif

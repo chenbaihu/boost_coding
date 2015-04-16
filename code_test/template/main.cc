@@ -1,18 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <iostream>
-
-#include "template.h"
-
-template<typename T> 
-void Test<T>::set_t(T t) {
-    t_ = t;
-}
-
-template<typename T> 
-T Test<T>::get_t() {
-    return t_;
-}
+#include "t.h"
 
 int main(int argc,char *argv[])
 {
@@ -22,5 +11,4 @@ int main(int argc,char *argv[])
     std::cout << test.get_t() << std::endl;
     return 0;
 }
-
 
