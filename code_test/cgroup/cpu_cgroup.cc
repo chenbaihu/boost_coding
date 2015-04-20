@@ -1,5 +1,6 @@
 /*
  * cpu 限制:
+ * 创建一个cpu cgroup
  * mkdir /sys/fs/cgroup/cpu/chenbaihu
  * ls /sys/fs/cgroup/cpu/chenbaihu/
  * 有如下目录，对应CPU资源的不同限制：
@@ -16,7 +17,7 @@
  * echo "2,3" > /sys/fs/cgroup/cpuset/haoel/cpuset.cpus
  *
  * 限制方法：
- * 将pid添加到/sys/fs/cgroup/cpu/chenbaihu/tasks
+ * 将进程加入这个cgroup: /sys/fs/cgroup/cpu/chenbaihu/tasks
  * 例如：echo 3529 >> /sys/fs/cgroup/cpu/chenbaihu/tasks
  */
 
