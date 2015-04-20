@@ -6,16 +6,18 @@
  * cgroup.clone_children cgroup.procs cpu.cfs_quota_us cpu.stat tasks 
  * cgroup.event_control  cpu.cfs_period_us  cpu.shares notify_on_release
  * 
- * cpu百分比限制：
+ * cpu一个核上的百分比限制：
  * cat /sys/fs/cgroup/cpu/chenbaihu/cpu.cfs_quota_us    默认: -1 不限制，可以控制到十万分之几的粒度
  * 比如：
  * echo 20000 > /sys/fs/cgroup/cpu/chenbaihu/cpu.cfs_quota_us   限制到20%
- * 
- * 限制方法：将pid添加到 echo 3529 >> /sys/fs/cgroup/cpu/chenbaihu/tasks
  *
  * cpu核数限制：
- * 限制CPU只能使用#2核和#3核 
+ * 比如限制CPU只能使用#2核和#3核 
  * echo "2,3" > /sys/fs/cgroup/cpuset/haoel/cpuset.cpus
+ *
+ * 限制方法：
+ * 将pid添加到/sys/fs/cgroup/cpu/chenbaihu/tasks
+ * 例如：echo 3529 >> /sys/fs/cgroup/cpu/chenbaihu/tasks
  */
 
 #define _GNU_SOURCE         /* See feature_test_macros(7) */
@@ -27,7 +29,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/syscall.h>
-
 
 const int NUM_THREADS = 5;
 
