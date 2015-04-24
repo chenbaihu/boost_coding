@@ -72,7 +72,7 @@ public:
 	MsgQueueCond():cond_(lock_) {}
 
 	~MsgQueueCond() {	
-		util::CGuard<MUTEX> guard(lock_);
+		util::Guard<MUTEX> guard(lock_);
 		while (queue_.size() > 0) {
 			MTYPE* pvalue = queue_.front();
 			if(pvalue != NULL) {
@@ -85,7 +85,7 @@ public:
 	}
 
 	bool post_msg(MTYPE* msg) {
-		util::CGuard<MUTEX> guard(lock_);	
+		util::Guard<MUTEX> guard(lock_);	
         if (queue_.size() >(size_t) g_maxqueuesize) {
 			//printf("full [%d]\n",g_maxqueuesize);
 			return false;
