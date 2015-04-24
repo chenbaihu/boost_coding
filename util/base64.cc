@@ -131,43 +131,41 @@ static const unsigned char index_64[256] = {
 
 static const char base64_char[64] =
 {
-	'A','B','C','D',  'E','F','G','H',
-	'I','J','K','L',  'M','N','O','P',
-	'Q','R','S','T',  'U','V','W','X',
-	'Y','Z','a','b',  'c','d','e','f',
-	'g','h','i','j',  'k','l','m','n',
-	'o','p','q','r',  's','t','u','v',
-	'w','x','y','z',  '0','1','2','3',
-	'4','5','6','7',  '8','9','-','_'
+    'A','B','C','D',  'E','F','G','H',
+    'I','J','K','L',  'M','N','O','P',
+    'Q','R','S','T',  'U','V','W','X',
+    'Y','Z','a','b',  'c','d','e','f',
+    'g','h','i','j',  'k','l','m','n',
+    'o','p','q','r',  's','t','u','v',
+    'w','x','y','z',  '0','1','2','3',
+    '4','5','6','7',  '8','9','-','_'
 };
-
 
 void base64_encode_group(const unsigned char *input, int grp_len, char* output)
 {
-	if (grp_len == 3) {
-		output[0] = base64_char[ input[0]>>2 ];
-		output[1] = base64_char[ ((input[0]&0x03)<<4) + (input[1]>>4) ];
-		output[2] = base64_char[ ((input[1]&0x0f)<<2) + (input[2]>>6) ];
-		output[3] = base64_char[ input[2]&0x3f ];
+    if (grp_len == 3) {
+    	output[0] = base64_char[ input[0]>>2 ];
+    	output[1] = base64_char[ ((input[0]&0x03)<<4) + (input[1]>>4) ];
+    	output[2] = base64_char[ ((input[1]&0x0f)<<2) + (input[2]>>6) ];
+    	output[3] = base64_char[ input[2]&0x3f ];
         return;
-	}
+    }
 	
     if (grp_len == 2) {
-		output[0] = base64_char[ input[0]>>2 ];
-		output[1] = base64_char[ ((input[0]&0x03)<<4) + (input[1]>>4) ];
-		output[2] = base64_char[ ((input[1]&0x0f)<<2) ];
-		output[3] = '=';
+        output[0] = base64_char[ input[0]>>2 ];
+        output[1] = base64_char[ ((input[0]&0x03)<<4) + (input[1]>>4) ];
+        output[2] = base64_char[ ((input[1]&0x0f)<<2) ];
+        output[3] = '=';
         return;
-	}
+    }
 	
     if (grp_len == 1) {
-		output[0] = base64_char[ input[0]>>2 ];
-		output[1] = base64_char[ ((input[0]&0x03)<<4) ];
-		output[2] = '=';
-		output[3] = '=';
-	}
+	output[0] = base64_char[ input[0]>>2 ];
+	output[1] = base64_char[ ((input[0]&0x03)<<4) ];
+	output[2] = '=';
+	output[3] = '=';
+    }
 }
-
 
 void base64_decode_group(const char input[4], unsigned char output[3], int* p_write)
 {
@@ -194,76 +192,77 @@ void base64_decode_group(const char input[4], unsigned char output[3], int* p_wr
 
 int base64_encode(const unsigned char* input, int input_len, char* output, int output_size, int* result_length)
 {
-	int encode_length;
-
+    int encode_length;
+    
     if (!output) {
         return -1;
     }
-
-	encode_length = ((input_len+2)/3)*4;
+    
+    encode_length = ((input_len+2)/3)*4;
     if (output_size < encode_length) {
         return -1;
     }
-	*result_length = encode_length;
-
-	int grp_count = (input_len+2)/3;
-	for(int i=0; i<grp_count; i++) {
-		if (i==grp_count-1) {
-			base64_encode_group(input+i*3, input_len-i*3, output+i*4);
+    *result_length = encode_length;
+    
+    int grp_count = (input_len+2)/3;
+    for(int i=0; i<grp_count; i++) {
+        if (i==grp_count-1) {
+        	base64_encode_group(input+i*3, input_len-i*3, output+i*4);
             continue;
         }
-		base64_encode_group(input+i*3, 3, output+i*4);
-	}
-	return 0;
+        base64_encode_group(input+i*3, 3, output+i*4);
+    }
+    return 0;
 }
 
 int base64_decode(const char* input, int input_len, unsigned char* output, int output_size, int* result_length)
 {
-	int count;
-	int written;
-
-	if (!output) {
-	    return -1;
-	}
-
-	if ((input_len%4) != 0) {
-	    return -1;
-	}
-
-	*result_length = count = 0;
-	while(count<input_len){
-		if(*result_length>=output_size)
-			return -1;
-
-		int bad_data = 0;
-		if (input[count+2]=='=' && input[count+3]=='=') { 
+    int count;
+    int written;
+    
+    if (!output) {
+        return -1;
+    }
+    
+    if ((input_len%4) != 0) {
+        return -1;
+    }
+    
+    *result_length = count = 0;
+    while (count<input_len){
+        if(*result_length>=output_size) {
+        	return -1;
+        }
+        
+        int bad_data = 0;
+        if (input[count+2]=='=' && input[count+3]=='=') { 
             if(CHAR64(input[count])==XX 
                     || CHAR64(input[count+1])==XX) {
                 bad_data = 1;
             }
-		} else if(input[count+3]=='=') {
+        } else if(input[count+3]=='=') {
             if(CHAR64(input[count])==XX 
                     || CHAR64(input[count+1])==XX 
                     || CHAR64(input[count+2])==XX) {
                 bad_data = 1;
             }
-		} else {
-			for(int i=0; i<4 && !bad_data; i++) {
-				if(CHAR64(input[count+i])==XX || input[count+i]=='=') {
-					bad_data = 1;
+        } else {
+            for(int i=0; i<4 && !bad_data; i++) {
+                if(CHAR64(input[count+i])==XX || input[count+i]=='=') {
+                    bad_data = 1;
                 }
-			}
-		}
-
+            }
+        }
+        
         if(bad_data) {
             return -1;
         }
-
-		base64_decode_group(input+count, (unsigned char*)output + *result_length, &written);
-		*result_length += written;
-		count += 4;
-	}
-	return 0;
+        
+        base64_decode_group(input+count, (unsigned char*)output + *result_length, &written);
+        *result_length += written;
+        count += 4;
+    }
+    return 0;
 }
 
 } // end of namespace util
