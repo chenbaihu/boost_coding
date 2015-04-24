@@ -20,13 +20,13 @@ public:
     ~MsgQueue() {
     	util::Guard<MUTEX> guard(lock_);
     	while(queue_.size() > 0) {
-    		MTYPE* pvalue = queue_.front();
-    		if (pvalue != NULL) {
-    			delete pvalue;
-    			queue_.pop_front();
-    		} else {
-    			break;
-    		}
+    	    MTYPE* pvalue = queue_.front();
+    	    if (pvalue != NULL) {
+    	       delete pvalue;
+    	       queue_.pop_front();
+    	    } else {
+               break;
+    	    }
     	}
     }
     
@@ -42,15 +42,16 @@ public:
     MTYPE* get_msg() {
     	util::Guard<MUTEX> guard(lock_);
     	
-    	if(queue_.size() <= 0)
-    		return NULL;
+    	if (queue_.size() <= 0) {
+    	   return NULL;
+	}
     	
     	MTYPE* pvalue = queue_.front();
-    	if(pvalue != NULL) {
-    		queue_.pop_front();
-    		return pvalue;
+    	if (pvalue != NULL) {
+    	    queue_.pop_front();
+    	    return pvalue;
     	} else {
-    		return NULL;
+    	    return NULL;
     	}	
     }
     
@@ -74,60 +75,59 @@ public:
     ~MsgQueueCond() {	
     	util::Guard<MUTEX> guard(lock_);
     	while (queue_.size() > 0) {
-    		MTYPE* pvalue = queue_.front();
-    		if(pvalue != NULL) {
-    			delete pvalue;
-    			queue_.pop_front();
-    		} else {
-    			break;
-    		}
+    	    MTYPE* pvalue = queue_.front();
+	    if(pvalue != NULL) {
+		    delete pvalue;
+		    queue_.pop_front();
+	    } else {
+		    break;
+	    }
     	}
     }
     
     bool post_msg(MTYPE* msg) {
-    	util::Guard<MUTEX> guard(lock_);	
-    if (queue_.size() >(size_t) g_maxqueuesize) {
-    		//printf("full [%d]\n",g_maxqueuesize);
-    		return false;
-    	}
+        util::Guard<MUTEX> guard(lock_);	
+        if (queue_.size() >(size_t) g_maxqueuesize) {
+    	    //printf("full [%d]\n",g_maxqueuesize);
+    	    return false;
+        }
     
-    	queue_.push_back(msg);
-    	cond_.signal();
-    	return true;
+        queue_.push_back(msg);
+        cond_.signal();
+        return true;
     }
     
     MTYPE* get_msg() {
-    	util::Guard<MUTEX> guard(lock_);
-    	
-    	while (queue_.size() <= 0) {
-    		cond_.wait();
-    	}
-    	
-    	MTYPE* pvalue = queue_.front();
-    	if (pvalue != NULL) {
-    		queue_.pop_front();
-    		return pvalue;
-    	} else {
-    		return NULL;
-    	}	
+    	util::Guard<MUTEX> guard(lock_);	
+	while (queue_.size() <= 0) {
+    	    cond_.wait();
+	}
+
+	MTYPE* pvalue = queue_.front();
+	if (pvalue != NULL) {
+	    queue_.pop_front();
+	    return pvalue;
+	} else {
+	    return NULL;
+	}	
     }
     
     MTYPE* get_msg(const struct timespec* time) {	
     	util::Guard<MUTEX> guard(lock_);
     	
     	if (queue_.size() <= 0) {
-    		cond_.wait(time);
-    		if(queue_.size() <= 0) {
-    			return NULL;
-    		}
+    	    cond_.wait(time);
+    	    if(queue_.size() <= 0) {
+    	        return NULL;
+       	    }
     	}
     	
     	MTYPE* pvalue = queue_.front();
     	if (pvalue != NULL) {
-    		queue_.pop_front();
-    		return pvalue;
+    	    queue_.pop_front();
+    	    return pvalue;
     	} else {
-    		return NULL;
+    	    return NULL;
     	}	
     }
     
