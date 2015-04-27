@@ -56,8 +56,7 @@ void InitUdpPtrVec(UDPPtrVec& udp_ptr_vec, int udp_req_num)
 {
     int i = 0;
     for (i=0; i<udp_req_num; i++) {
-        //UDPPtr udp_ptr(new UDP("106.39.202.170"/*w-hkill35.safe.bjdt.qihoo.net*/, 53));
-        UDPPtr udp_ptr(new UDP(FLAGS_server_ip.c_str()/*w-hkill35.safe.bjdt.qihoo.net*/, FLAGS_server_port));
+        UDPPtr udp_ptr(new UDP(FLAGS_server_ip.c_str(), FLAGS_server_port));
         if(!udp_ptr->CreateSocket()) {
             //exit(1);
             LOG(ERROR) << "InitUdpPtrVec create udp failed i=" << i << std::endl;
