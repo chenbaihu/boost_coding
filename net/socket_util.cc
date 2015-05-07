@@ -1,4 +1,4 @@
-#include "socket_uti.h"
+#include "socket_util.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -14,8 +14,47 @@
 
 NS_BEG_NET
 
+bool socket_setfd_tag(int fd, int tag, char * errbuf)
+{
+    int val;
+    if ((val = fcntl(fd, F_GETFL, 0)) == -1) {
+        snprintf(errbuf, 1024, "fcntl F_GETFL error:[%d:%s]", errno, strerror(errno));
+        return false;
+    }
+
+    if (fcntl(fd, F_SETFL, val | tag) == -1) {
+        snprintf(errbuf, 1024, "fcntl F_SETFL error:[%d:%s]", errno, strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+bool socket_setfd_nonblock(int fd, char * errbuf)
+{
+    return socket_setfd_tag(fd,O_NONBLOCK,errbuf);
+}
+
 int socket_accept(int listenfd, struct sockaddr *addr) 
 {
+    struct sockaddr_storage addr_storage;
+    socklen_t addrlen = sizeof(addr_storage);
+    int fd = accept(listenfd, (sockaddr*)&addr_storage, &addrlen);
+    if (fd < 0) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            return -1;   // next accpet
+        }
+    }
+
+    if (addr_storage.ss_family == AF_INET) {   // ipv4 socket
+        memcpy(addr, &addr_storage, addrlen);
+        return fd;
+    } else if (addr_storage.ss_family == AF_INET6) { // ipv6 socket
+        close(fd); // not support
+        return -1;
+    } else { // error socket
+        fprintf(stderr, "accept failed, listenfd=%d, error=%s", listenfd, strerror(errno));
+        return -1;
+    }
 }
 
 ssize_t socket_sendn(int sockfd, const char* buffer, size_t buflen)
@@ -77,11 +116,10 @@ int socket_readn(int sockfd, size_t data_len, char* recv_buf, size_t buf_len)
     return read_len;
 }
 
-int socket_keepalive(int sockfd, int keep_idle=5, int keep_interval=3, int keep_count)
+int socket_keepalive(int sockfd, int keep_idle/*=5*/, int keep_interval/*=3*/, int keep_count/*=2*/)
 {
     int keep_alive  = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &keep_alive, sizeof(keep_alive)) == -1)
-    {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &keep_alive, sizeof(keep_alive)) == -1) {
         fprintf(stderr, "setsockopt SO_KEEPALIVE: %s", strerror(errno));
         return -1;
     }

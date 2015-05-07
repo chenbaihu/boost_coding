@@ -1,0 +1,3 @@
+SELECT tv_sec, p1, c1, count(*) as pv FROM ycs WHERE day = '2015-04-29' and £¨hour = '10' or hour = '09'£© limit 1000 group by tv_sec, p1, c1;
+
+select count(*) as pv, count(DISTINCT id) from table_name
