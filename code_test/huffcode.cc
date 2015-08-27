@@ -1,3 +1,4 @@
+//def: git@github.com:drichardson/huffman.git
 #include "huffman.h"
 
 #include <unistd.h>

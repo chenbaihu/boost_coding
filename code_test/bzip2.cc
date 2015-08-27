@@ -1,3 +1,5 @@
+//dep: git@github.com:osrf/bzip2_cmake.git
+
 #include "bzlib.h"
 
 #include <unistd.h>

@@ -1,3 +1,4 @@
+//dep: git@github.com:google/snappy.git
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
