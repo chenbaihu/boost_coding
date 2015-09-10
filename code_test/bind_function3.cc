@@ -14,6 +14,7 @@ public:
 public:
     typedef std::tr1::function<void(size_t id, std::string value)> OnGetKey;
     typedef std::tr1::function<void(std::vector<size_t> ids, std::vector<std::string> value)> OnMGetKey;
+    typedef std::tr1::function<void(std::vector<std::string> value)> OnMGetKey2;
 
 public:
     DataMgn() {
@@ -26,6 +27,7 @@ public:
     void Get(KeyType type, size_t id, const OnGetKey& onGetKey);
     
     void MGet(KeyType type, std::vector<size_t> ids, const OnMGetKey& onGetKey);
+    void MGet2(KeyType type, std::vector<size_t> ids, const OnMGetKey2& onGetKey);
 private:   
     typedef std::map<size_t/*id*/, std::string> ISMap;
     typedef std::map<KeyType, ISMap> TISMap;
@@ -75,6 +77,24 @@ void DataMgn::MGet(KeyType type, std::vector<size_t> ids, const OnMGetKey& onMGe
     onMGetKey(ids, values);
 }
 
+void DataMgn::MGet2(KeyType type, std::vector<size_t> ids, const OnMGetKey2& onMGetKey)
+{
+    ISMap& d = datas_[type]; 
+    
+    std::vector<std::string> values;
+    values.resize(ids.size());
+
+    //TODO 从 redis，memcache，codis，ckv等获取信息
+    for (size_t i=0; i<ids.size(); i++) {
+        ISMap::const_iterator it = d.find(ids[i]);
+        if (it == d.end()) {
+            values[i] = std::string("NULL"); // not find
+        } 
+        values[i] = it->second;
+    }
+    onMGetKey(values);
+}
+
 typedef struct OrderFeatrue { 
     int oid;
     //....
@@ -109,6 +129,7 @@ private:
 bool Featrue::Exec(std::vector<size_t> dids, std::vector<size_t> oids) { 
     dc_.MGet(DataMgn::kDid, dids, std::tr1::bind(&Featrue::ParseDriversFeature, this, std::tr1::placeholders::_1, std::tr1::placeholders::_2));
     dc_.MGet(DataMgn::kOid, oids, std::tr1::bind(&Featrue::ParseOrdersFeature, this, std::tr1::placeholders::_1, std::tr1::placeholders::_2));
+    dc_.MGet2(DataMgn::kOid, oids, std::tr1::bind(&Featrue::ParseOrdersFeature, this, oids, std::tr1::placeholders::_1));
 }
 
 void Featrue::ParseDriversFeature(std::vector<size_t> dids, std::vector<std::string> values) 
