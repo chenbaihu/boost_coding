@@ -32,6 +32,7 @@ bool Bzip2::Compress(const void* data, size_t data_len, std::string& compress_da
 #ifdef _DEBUG 
         fprintf(stderr, "Bzip2::Uncompress ret=%d\n", ret);
 #endif
+        compress_data = std::string((const char*)data, data_len);
         return false; 
     }
     compress_data.resize(compress_datalen);

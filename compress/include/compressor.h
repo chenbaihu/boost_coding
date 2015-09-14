@@ -21,8 +21,9 @@ namespace util {
 
 enum  CompressorType { 
     kNoCompress, 
-    kHuffman,
+    kHuffman, 
     kBZIP2, 
+    kTestHuffman,
     //kZlibCompress, 
     //kGZipCompress, 
 };

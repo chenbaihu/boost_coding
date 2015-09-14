@@ -6,7 +6,7 @@
 namespace util { 
 
 #define BZ2_BEST_SPEED   9 
-#define BZ2_MAX_DATA_LEN 1*1024*1024   // 1M
+#define BZ2_MAX_DATA_LEN 4*1024*1024   // 4M
 
 //bzlib.h
 #define BZ_RUN               0

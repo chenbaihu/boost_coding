@@ -17,7 +17,8 @@ CFLAGS=$(TOP_CFLAGS) -c -fPIC -Wshadow -Wcast-qual -Wcast-align           \
 
 CPPFLAGS=$(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords 
 
-LDFLAGS=-L../ -lcompress -L../../common -lcom ../../../thirdparty/huffman/lib/libhuffman.a ../../../thirdparty/bzip2/lib/libbz2.a -L/usr/lib64/ -lgtest -lpthread
+#LDFLAGS=-L../ -lcompress -L../../common -lcom ../../../thirdparty/huffman/lib/libhuffman.a ../../../thirdparty/bzip2/lib/libbz2.a -L/usr/lib64/ -lgtest -lpthread
+LDFLAGS=../libcompress.a -L../../common -lcom ../../../thirdparty/huffman/lib/libhuffman.a ../../../thirdparty/bzip2/lib/libbz2.a ../../../thirdparty/zlib/lib/libz.a  -L/usr/lib64/ -lgtest -lpthread
 #LDFLAGS=../libcompress.a -L/usr/lib64/ -lgtest -lpthread
 
 DIRNAME=$(shell basename `pwd`)

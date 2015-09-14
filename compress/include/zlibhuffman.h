@@ -1,5 +1,5 @@
-#ifndef _HUFFMANCODE_H_
-#define _HUFFMANCODE_H_ 
+#ifndef _ZLIB_HUFFMANCODE_H_
+#define _ZLIB_HUFFMANCODE_H_ 
 
 #include "compressor.h"
 
@@ -11,8 +11,9 @@ namespace util {
 #define HM_PARAM_ERROR    (-2) 
 #define HM_DATA_ERROR     (-4)
 #define HM_OUTBUFF_FULL   (-8)  
+#define HM_ZLIB_ERROR     (-12)  
 
-class HuffManCode : public Compressor {
+class ZlibHuffManCode : public Compressor {
     virtual bool Compress(const void* data, size_t data_len, std::string& compress_data);
     virtual bool Uncompress(const void* data, size_t data_len, std::string& uncompresed_data, size_t uncompresed_bound=0);
 

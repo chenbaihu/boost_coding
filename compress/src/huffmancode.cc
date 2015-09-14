@@ -59,13 +59,14 @@ int HuffManCode::Compress(const void* source, size_t sourceLen, void* dest, size
 
 bool HuffManCode::Compress(const void* data, size_t data_len, std::string& compress_data) 
 {
-    if (data==NULL || data_len>HM_MAX_DATA_LEN) { 
-        return false;
-    }
-
-    if (data_len==0) {
+    if (data==NULL || data_len==0) {
         compress_data.clear();
         return true;
+    }
+
+    if (data_len>HM_MAX_DATA_LEN) { 
+        compress_data = std::string((const char*)data, data_len);
+        return false;
     } 
 
     //size_t compress_data_len = HM_MAX_DATA_LEN; 

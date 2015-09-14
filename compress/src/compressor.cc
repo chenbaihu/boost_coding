@@ -2,6 +2,7 @@
 
 #include "bzip2.h"
 #include "huffmancode.h"
+#include "zlibhuffman.h"
 
 //#include <zlib/zlib.h>
 //#include "zlib.h"
@@ -17,10 +18,13 @@ CompressorPtr CompressorFactory::CreateCompressor(int compress_method)
             return std::tr1::shared_ptr<Compressor>(new FakeCompressor());
             break;
         case kHuffman:
-            return std::tr1::shared_ptr<Compressor>(new HuffManCode());
+            return std::tr1::shared_ptr<Compressor>(new ZlibHuffManCode());
             break;
         case kBZIP2:
             return std::tr1::shared_ptr<Compressor>(new Bzip2());
+            break;
+        case kTestHuffman:
+            return std::tr1::shared_ptr<Compressor>(new HuffManCode());
             break;
         //case kZlibCompress:
         //    return std::tr1::shared_ptr<Compressor>(new ZLib());

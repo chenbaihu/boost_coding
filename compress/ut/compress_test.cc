@@ -39,7 +39,7 @@ TEST_UNIT(compress_huffmancode_test1)
 {
     std::string input_data = "123456789"; 
 
-    util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kHuffman); 
+    util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kTestHuffman); 
     H_TEST_ASSERT(compressPtr!=NULL);
 
     std::string compress_data; 
@@ -47,11 +47,63 @@ TEST_UNIT(compress_huffmancode_test1)
 
     std::string uncompress_data; 
     H_TEST_ASSERT(compressPtr->Uncompress(compress_data.data(), compress_data.size(), uncompress_data)); 
-    printf("uncompress_data.size=%ld\tinput_data.size=%ld\n", uncompress_data.size(), input_data.size()); 
+    printf("compress_data.size=%ld\tuncompress_data.size=%ld\tinput_data.size=%ld\n", compress_data.size(), uncompress_data.size(), input_data.size()); 
     H_TEST_ASSERT(memcmp(uncompress_data.data(), input_data.data(), input_data.size())==0); 
 } 
 
 TEST_UNIT(compress_huffmancode_test2) 
+{
+    std::string input_data_b64 = "CgomCgoKCgoKbQoK4AoKCgpICgoKCgoKCgoKCgAKCgoKCgoKQQoKCgoKAAoACmkKCgoKCgoKCgoKCgoKCgIKCgoKCgoKCgoKCgoKCgoKCgoKCgAKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgAKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCCgoKCgoKCgoKCgoKCgoKCgoKCgoACgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgAKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgAKAApjCgAKAAoKCgoKSgo=";  
+    std::string input_data = util::Base64::decode(input_data_b64);
+
+    util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kTestHuffman); 
+    H_TEST_ASSERT(compressPtr!=NULL);
+
+    std::string compress_data; 
+    H_TEST_ASSERT(compressPtr->Compress(input_data.data(), input_data.size(), compress_data)); 
+
+    std::string uncompress_data; 
+    H_TEST_ASSERT(compressPtr->Uncompress(compress_data.data(), compress_data.size(), uncompress_data)); 
+    printf("compress_data.size=%ld\tuncompress_data.size=%ld\tinput_data.size=%ld\n", compress_data.size(), uncompress_data.size(), input_data.size()); 
+    H_TEST_ASSERT(memcmp(uncompress_data.data(), input_data.data(), input_data.size())==0); 
+    H_TEST_ASSERT(input_data_b64==util::Base64::encode(uncompress_data)); 
+}
+
+//TEST_UNIT(compress_huffmancode_test3) 
+//{
+//    std::string input_data_b64 = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB";
+//    std::string input_data = util::Base64::decode(input_data_b64);
+//
+//    util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kTestHuffman); 
+//    H_TEST_ASSERT(compressPtr!=NULL);
+//
+//    std::string compress_data; 
+//    H_TEST_ASSERT(compressPtr->Compress(input_data.data(), input_data.size(), compress_data)); 
+//
+//    std::string uncompress_data; 
+//    H_TEST_ASSERT(compressPtr->Uncompress(compress_data.data(), compress_data.size(), uncompress_data)); 
+//    printf("uncompress_data.size=%ld\tinput_data.size=%ld\n", uncompress_data.size(), input_data.size()); 
+//    H_TEST_ASSERT(memcmp(uncompress_data.data(), input_data.data(), input_data.size())==0); 
+//    H_TEST_ASSERT(input_data_b64==util::Base64::encode(uncompress_data)); 
+//}
+
+TEST_UNIT(compress_zlibhuffmancode_test1) 
+{
+    std::string input_data = "123456789"; 
+
+    util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kHuffman); 
+    H_TEST_ASSERT(compressPtr!=NULL);
+
+    std::string compress_data; 
+    H_TEST_EQUAL(compressPtr->Compress(input_data.data(), input_data.size(), compress_data), false); // 因为膨胀 
+
+    //std::string uncompress_data; 
+    //H_TEST_ASSERT(compressPtr->Uncompress(compress_data.data(), compress_data.size(), uncompress_data)); 
+    //printf("uncompress_data.size=%ld\tinput_data.size=%ld\n", uncompress_data.size(), input_data.size()); 
+    //H_TEST_ASSERT(memcmp(uncompress_data.data(), input_data.data(), input_data.size())==0); 
+} 
+
+TEST_UNIT(compress_zlibhuffmancode_test2) 
 {
     std::string input_data_b64 = "CgomCgoKCgoKbQoK4AoKCgpICgoKCgoKCgoKCgAKCgoKCgoKQQoKCgoKAAoACmkKCgoKCgoKCgoKCgoKCgIKCgoKCgoKCgoKCgoKCgoKCgoKCgAKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgAKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoCCgoKCgoKCgoKCgoKCgoKCgoKCgoACgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgAKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgAKAApjCgAKAAoKCgoKSgo=";  
     std::string input_data = util::Base64::decode(input_data_b64);
@@ -64,7 +116,25 @@ TEST_UNIT(compress_huffmancode_test2)
 
     std::string uncompress_data; 
     H_TEST_ASSERT(compressPtr->Uncompress(compress_data.data(), compress_data.size(), uncompress_data)); 
-    printf("uncompress_data.size=%ld\tinput_data.size=%ld\n", uncompress_data.size(), input_data.size()); 
+    printf("------compress_data.size=%ld\tuncompress_data.size=%ld\tinput_data.size=%ld\n", compress_data.size(), uncompress_data.size(), input_data.size()); 
+    H_TEST_ASSERT(memcmp(uncompress_data.data(), input_data.data(), input_data.size())==0); 
+    H_TEST_ASSERT(input_data_b64==util::Base64::encode(uncompress_data)); 
+}
+
+TEST_UNIT(compress_zlibhuffmancode_test3) 
+{
+    std::string input_data_b64 = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB";
+    std::string input_data = util::Base64::decode(input_data_b64);
+
+    util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kHuffman); 
+    H_TEST_ASSERT(compressPtr!=NULL);
+
+    std::string compress_data; 
+    H_TEST_ASSERT(compressPtr->Compress(input_data.data(), input_data.size(), compress_data)); 
+
+    std::string uncompress_data; 
+    H_TEST_ASSERT(compressPtr->Uncompress(compress_data.data(), compress_data.size(), uncompress_data)); 
+    printf("-------compress_data.size=%ld\tuncompress_data.size=%ld\tinput_data.size=%ld\n", compress_data.size(), uncompress_data.size(), input_data.size()); 
     H_TEST_ASSERT(memcmp(uncompress_data.data(), input_data.data(), input_data.size())==0); 
     H_TEST_ASSERT(input_data_b64==util::Base64::encode(uncompress_data)); 
 }
@@ -118,26 +188,6 @@ TEST_UNIT(compress_bzip2_test2)
             compress_data.size(), 
             uncompress_data.size());
     H_TEST_ASSERT(memcmp(uncompress_data.data(), input_data.data(), input_data.size())==0); 
-    H_TEST_ASSERT(input_data_b64==util::Base64::encode(uncompress_data)); 
-}
-
-TEST_UNIT(compress_bzip2_test3) 
-{
-    std::string input_data_b64 = "QlpoOTFBWSZTWVZy4ZUAAAb+cH9WzmVUgIBAQEBEAEAAIAAQADAAtsDTRU/QU9TR6hp6Rmp6nqEAk9J6RoABoAlE1NDEAAAGfM4OqH4RNC9zWJxYnmqSFiABBjMTeCBIhDIgmUCSglD6WZcFSxYRgwFaiDlQlFwQ7ewlXyi/NaTVGLV8smhF3UWhRgIyXcndYHsXOtU266uOLZYCJF5hQGKRwvgjjD1+vP2uSNinIjoaQfPxR+tIzxmkZFmF3/i7kinChIKzlwyo";
-    std::string input_data = util::Base64::decode(input_data_b64);
-
-    util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kBZIP2); 
-    //util::CompressorPtr compressPtr = util::CompressorFactory::CreateCompressor(util::kHuffman); 
-    H_TEST_ASSERT(compressPtr!=NULL);
-
-    std::string uncompress_data; 
-    uint64_t begms = timems();
-    H_TEST_ASSERT(compressPtr->Uncompress(input_data.data(), input_data.size(), uncompress_data, 100000)); 
-    fprintf(stdout, "Uncompress usedtime=%lu\tinput_data.size=%lu\tuncompress_data.size=%lu\n", 
-            TimeConsumeMs(begms), 
-            input_data.size(), 
-            uncompress_data.size());
-
     H_TEST_ASSERT(input_data_b64==util::Base64::encode(uncompress_data)); 
 }
 
