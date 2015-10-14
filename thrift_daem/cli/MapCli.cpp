@@ -2,6 +2,8 @@
 
 #include "MapService.h"             // /usr/local/bin/thrift -r -gen cpp idl/map.thrift  生成的文件中的一个
 
+#ifndef DAsyncMapCli
+
 #include "thrift/protocol/TBinaryProtocol.h"
 #include "thrift/transport/TSocket.h"
 #include "thrift/transport/TTransportUtils.h"
@@ -136,6 +138,6 @@ bool MapCli::Compute(
     return true;
 } /*}}}*/
 
-
+#endif //#ifndef DAsyncMapCli
 
 

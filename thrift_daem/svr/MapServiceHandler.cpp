@@ -4,6 +4,8 @@
 #include "MapServiceHandler.h"
 #include <stdio.h>
 
+#ifndef DAsyncMapCli
+
 MapServiceHandler::MapServiceHandler()
 {
     // Your initialization goes here
@@ -24,4 +26,6 @@ void MapServiceHandler::compute(ComputeResp& _return, const ComputeReq& req)
     _return.data = std::string("hello client");
     return;
 }
+
+#endif //#ifndef DAsyncMapCli
 

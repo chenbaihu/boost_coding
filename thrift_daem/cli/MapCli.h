@@ -11,6 +11,8 @@ using std::string;
 
 #include <stdint.h>
 
+#ifndef DAsyncMapCli
+
 namespace apache { namespace thrift { 
     namespace transport { 
         class TSocket; 
@@ -63,6 +65,8 @@ private:
 }; 
 typedef std::tr1::shared_ptr<MapCli> MapCliPtr; 
 typedef std::vector<MapCliPtr>       MapCliPtrVec;
+
+#endif //#ifndef DAsyncMapCli
 
 #endif 
 

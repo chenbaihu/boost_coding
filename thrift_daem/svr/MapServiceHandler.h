@@ -10,6 +10,8 @@
 using std::string;
 using std::map;
 
+#ifndef DAsyncMapCli
+
 class MapServiceHandler : virtual public MapServiceIf 
 {
  public:
@@ -17,5 +19,7 @@ class MapServiceHandler : virtual public MapServiceIf
      
      void compute(ComputeResp& _return, const ComputeReq& req);
 };
+
+#endif //#ifndef DAsyncMapCli
 
 #endif //_MAP_SERVICE_H_

@@ -7,7 +7,13 @@
 #ifndef MapService_H
 #define MapService_H
 
+#include <thrift/transport/TBufferTransports.h>
+#include <thrift/cxxfunctional.h>
+namespace apache { namespace thrift { namespace async {
+class TAsyncChannel;
+}}}
 #include <thrift/TDispatchProcessor.h>
+#include <thrift/async/TAsyncDispatchProcessor.h>
 #include "map_types.h"
 
 
@@ -174,6 +180,7 @@ class MapService_compute_presult {
   _MapService_compute_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
   friend std::ostream& operator<<(std::ostream& out, const MapService_compute_presult& obj);
 };
@@ -264,6 +271,112 @@ class MapServiceMultiface : virtual public MapServiceIf {
     return;
   }
 
+};
+
+class MapServiceCobClient;
+
+class MapServiceCobClIf {
+ public:
+  virtual ~MapServiceCobClIf() {}
+  virtual void compute(tcxx::function<void(MapServiceCobClient* client)> cob, const ComputeReq& req) = 0;
+};
+
+class MapServiceCobSvIf {
+ public:
+  virtual ~MapServiceCobSvIf() {}
+  virtual void compute(tcxx::function<void(ComputeResp const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const ComputeReq& req) = 0;
+};
+
+class MapServiceCobSvIfFactory {
+ public:
+  typedef MapServiceCobSvIf Handler;
+
+  virtual ~MapServiceCobSvIfFactory() {}
+
+  virtual MapServiceCobSvIf* getHandler(const ::apache::thrift::TConnectionInfo& connInfo) = 0;
+  virtual void releaseHandler(MapServiceCobSvIf* /* handler */) = 0;
+};
+
+class MapServiceCobSvIfSingletonFactory : virtual public MapServiceCobSvIfFactory {
+ public:
+  MapServiceCobSvIfSingletonFactory(const boost::shared_ptr<MapServiceCobSvIf>& iface) : iface_(iface) {}
+  virtual ~MapServiceCobSvIfSingletonFactory() {}
+
+  virtual MapServiceCobSvIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
+    return iface_.get();
+  }
+  virtual void releaseHandler(MapServiceCobSvIf* /* handler */) {}
+
+ protected:
+  boost::shared_ptr<MapServiceCobSvIf> iface_;
+};
+
+class MapServiceCobSvNull : virtual public MapServiceCobSvIf {
+ public:
+  virtual ~MapServiceCobSvNull() {}
+  void compute(tcxx::function<void(ComputeResp const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const ComputeReq& /* req */) {
+    ComputeResp _return;
+    return cob(_return);
+  }
+};
+
+class MapServiceCobClient : virtual public MapServiceCobClIf {
+ public:
+  MapServiceCobClient(boost::shared_ptr< ::apache::thrift::async::TAsyncChannel> channel, ::apache::thrift::protocol::TProtocolFactory* protocolFactory) :
+    channel_(channel),
+    itrans_(new ::apache::thrift::transport::TMemoryBuffer()),
+    otrans_(new ::apache::thrift::transport::TMemoryBuffer()),
+    piprot_(protocolFactory->getProtocol(itrans_)),
+    poprot_(protocolFactory->getProtocol(otrans_)) {
+    iprot_ = piprot_.get();
+    oprot_ = poprot_.get();
+  }
+  boost::shared_ptr< ::apache::thrift::async::TAsyncChannel> getChannel() {
+    return channel_;
+  }
+  virtual void completed__(bool /* success */) {}
+  void compute(tcxx::function<void(MapServiceCobClient* client)> cob, const ComputeReq& req);
+  void send_compute(const ComputeReq& req);
+  void recv_compute(ComputeResp& _return);
+ protected:
+  boost::shared_ptr< ::apache::thrift::async::TAsyncChannel> channel_;
+  boost::shared_ptr< ::apache::thrift::transport::TMemoryBuffer> itrans_;
+  boost::shared_ptr< ::apache::thrift::transport::TMemoryBuffer> otrans_;
+  boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  ::apache::thrift::protocol::TProtocol* iprot_;
+  ::apache::thrift::protocol::TProtocol* oprot_;
+};
+
+class MapServiceAsyncProcessor : public ::apache::thrift::async::TAsyncDispatchProcessor {
+ protected:
+  boost::shared_ptr<MapServiceCobSvIf> iface_;
+  virtual void dispatchCall(tcxx::function<void(bool ok)> cob, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid);
+ private:
+  typedef  void (MapServiceAsyncProcessor::*ProcessFunction)(tcxx::function<void(bool ok)>, int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*);
+  typedef std::map<std::string, ProcessFunction> ProcessMap;
+  ProcessMap processMap_;
+  void process_compute(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot);
+  void return_compute(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, const ComputeResp& _return);
+  void throw_compute(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, ::apache::thrift::TDelayedException* _throw);
+ public:
+  MapServiceAsyncProcessor(boost::shared_ptr<MapServiceCobSvIf> iface) :
+    iface_(iface) {
+    processMap_["compute"] = &MapServiceAsyncProcessor::process_compute;
+  }
+
+  virtual ~MapServiceAsyncProcessor() {}
+};
+
+class MapServiceAsyncProcessorFactory : public ::apache::thrift::async::TAsyncProcessorFactory {
+ public:
+  MapServiceAsyncProcessorFactory(const ::boost::shared_ptr< MapServiceCobSvIfFactory >& handlerFactory) :
+      handlerFactory_(handlerFactory) {}
+
+  ::boost::shared_ptr< ::apache::thrift::async::TAsyncProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+
+ protected:
+  ::boost::shared_ptr< MapServiceCobSvIfFactory > handlerFactory_;
 };
 
 

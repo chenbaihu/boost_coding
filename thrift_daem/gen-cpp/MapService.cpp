@@ -5,6 +5,7 @@
  *  @generated
  */
 #include "MapService.h"
+#include "thrift/async/TAsyncChannel.h"
 
 
 
@@ -214,6 +215,26 @@ uint32_t MapService_compute_presult::read(::apache::thrift::protocol::TProtocol*
   return xfer;
 }
 
+uint32_t MapService_compute_presult::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
+  xfer += oprot->writeStructBegin("MapService_compute_presult");
+
+  xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_STRUCT, 0);
+  xfer += (*(this->success)).write(oprot);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.se) {
+    xfer += oprot->writeFieldBegin("se", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->se.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
+  return xfer;
+}
+
 void MapServiceClient::compute(ComputeResp& _return, const ComputeReq& req)
 {
   send_compute(req);
@@ -355,6 +376,220 @@ void MapServiceProcessor::process_compute(int32_t seqid, ::apache::thrift::proto
   ::apache::thrift::ReleaseHandler< MapServiceIfFactory > cleanup(handlerFactory_);
   ::boost::shared_ptr< MapServiceIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
   ::boost::shared_ptr< ::apache::thrift::TProcessor > processor(new MapServiceProcessor(handler));
+  return processor;
+}
+void MapServiceCobClient::compute(tcxx::function<void(MapServiceCobClient* client)> cob, const ComputeReq& req)
+{
+  send_compute(req);
+  channel_->sendAndRecvMessage(tcxx::bind(cob, this), otrans_.get(), itrans_.get());
+}
+
+void MapServiceCobClient::send_compute(const ComputeReq& req)
+{
+  int32_t cseqid = 0;
+  oprot_->writeMessageBegin("compute", ::apache::thrift::protocol::T_CALL, cseqid);
+
+  MapService_compute_pargs args;
+  args.req = &req;
+  args.write(oprot_);
+
+  oprot_->writeMessageEnd();
+  oprot_->getTransport()->writeEnd();
+  oprot_->getTransport()->flush();
+}
+
+void MapServiceCobClient::recv_compute(ComputeResp& _return)
+{
+
+  int32_t rseqid = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TMessageType mtype;
+  bool completed = false;
+
+  try {
+    iprot_->readMessageBegin(fname, mtype, rseqid);
+    if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
+      ::apache::thrift::TApplicationException x;
+      x.read(iprot_);
+      iprot_->readMessageEnd();
+      iprot_->getTransport()->readEnd();
+      completed = true;
+      completed__(true);
+      throw x;
+    }
+    if (mtype != ::apache::thrift::protocol::T_REPLY) {
+      iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+      iprot_->readMessageEnd();
+      iprot_->getTransport()->readEnd();
+      completed = true;
+      completed__(false);
+    }
+    if (fname.compare("compute") != 0) {
+      iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+      iprot_->readMessageEnd();
+      iprot_->getTransport()->readEnd();
+      completed = true;
+      completed__(false);
+    }
+    MapService_compute_presult result;
+    result.success = &_return;
+    result.read(iprot_);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+
+    if (result.__isset.success) {
+      // _return pointer has now been filled
+      completed = true;
+      completed__(true);
+      return;
+    }
+    if (result.__isset.se) {
+      completed = true;
+      completed__(true);
+      throw result.se;
+    }
+    completed = true;
+    completed__(true);
+    throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "compute failed: unknown result");
+  } catch (...) {
+    if (!completed) {
+      completed__(false);
+    }
+    throw;
+  }
+}
+
+void MapServiceAsyncProcessor::dispatchCall(tcxx::function<void(bool ok)> cob, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid) {
+  ProcessMap::iterator pfn;
+  pfn = processMap_.find(fname);
+  if (pfn == processMap_.end()) {
+    iprot->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot->readMessageEnd();
+    iprot->getTransport()->readEnd();
+    ::apache::thrift::TApplicationException x(::apache::thrift::TApplicationException::UNKNOWN_METHOD, "Invalid method name: '"+fname+"'");
+    oprot->writeMessageBegin(fname, ::apache::thrift::protocol::T_EXCEPTION, seqid);
+    x.write(oprot);
+    oprot->writeMessageEnd();
+    oprot->getTransport()->writeEnd();
+    oprot->getTransport()->flush();
+    return cob(true);
+  }
+  (this->*(pfn->second))(cob, seqid, iprot, oprot);
+  return;
+}
+
+void MapServiceAsyncProcessor::process_compute(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot)
+{
+  MapService_compute_args args;
+  void* ctx = NULL;
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("MapService.compute", NULL);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "MapService.compute");
+
+  try {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->preRead(ctx, "MapService.compute");
+    }
+    args.read(iprot);
+    iprot->readMessageEnd();
+    uint32_t bytes = iprot->getTransport()->readEnd();
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->postRead(ctx, "MapService.compute", bytes);
+    }
+  }
+  catch (const std::exception&) {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->handlerError(ctx, "MapService.compute");
+    }
+    return cob(false);
+  }
+  freer.unregister();
+  void (MapServiceAsyncProcessor::*return_fn)(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, const ComputeResp& _return) =
+    &MapServiceAsyncProcessor::return_compute;
+  void (MapServiceAsyncProcessor::*throw_fn)(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, ::apache::thrift::TDelayedException* _throw) =
+    &MapServiceAsyncProcessor::throw_compute;
+  iface_->compute(
+      tcxx::bind(return_fn, this, cob, seqid, oprot, ctx, tcxx::placeholders::_1),
+      tcxx::bind(throw_fn, this, cob, seqid, oprot, ctx, tcxx::placeholders::_1),
+      args.req);
+}
+
+void MapServiceAsyncProcessor::return_compute(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, const ComputeResp& _return)
+{
+  MapService_compute_presult result;
+  result.success = const_cast<ComputeResp*>(&_return);
+  result.__isset.success = true;
+
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("MapService.compute", NULL);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "MapService.compute");
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preWrite(ctx, "MapService.compute");
+  }
+
+  oprot->writeMessageBegin("compute", ::apache::thrift::protocol::T_REPLY, seqid);
+  result.write(oprot);
+  oprot->writeMessageEnd();
+  uint32_t bytes = oprot->getTransport()->writeEnd();
+  oprot->getTransport()->flush();
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postWrite(ctx, "MapService.compute", bytes);
+  }
+  return cob(true);
+}
+
+void MapServiceAsyncProcessor::throw_compute(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, ::apache::thrift::TDelayedException* _throw)
+{
+
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("MapService.compute", NULL);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "MapService.compute");
+
+  MapService_compute_result result;
+
+  try {
+    _throw->throw_it();
+    return cob(false);
+  }  catch (ServiceException &se) {
+    result.se = se;
+    result.__isset.se = true;
+  }
+ catch (std::exception& e) {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->handlerError(ctx, "MapService.compute");
+    }
+
+    ::apache::thrift::TApplicationException x(e.what());
+    oprot->writeMessageBegin("compute", ::apache::thrift::protocol::T_EXCEPTION, seqid);
+    x.write(oprot);
+    oprot->writeMessageEnd();
+    oprot->getTransport()->writeEnd();
+    oprot->getTransport()->flush();
+    return cob(true);
+  }
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preWrite(ctx, "MapService.compute");
+  }
+
+  oprot->writeMessageBegin("compute", ::apache::thrift::protocol::T_REPLY, seqid);
+  result.write(oprot);
+  oprot->writeMessageEnd();
+  uint32_t bytes = oprot->getTransport()->writeEnd();
+  oprot->getTransport()->flush();
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postWrite(ctx, "MapService.compute", bytes);
+  }
+  return cob(true);
+}
+
+::boost::shared_ptr< ::apache::thrift::async::TAsyncProcessor > MapServiceAsyncProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {
+  ::apache::thrift::ReleaseHandler< MapServiceCobSvIfFactory > cleanup(handlerFactory_);
+  ::boost::shared_ptr< MapServiceCobSvIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
+  ::boost::shared_ptr< ::apache::thrift::async::TAsyncProcessor > processor(new MapServiceAsyncProcessor(handler));
   return processor;
 }
 
