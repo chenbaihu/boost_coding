@@ -43,7 +43,7 @@ int main()
     //TEvhttpServer server(processor, nPort);
     //server.serve();
     
-    #else
+    #else 
 
     shared_ptr<MapServiceHandler> handler(new MapServiceHandler());
     shared_ptr<TProcessor>        processor(new MapServiceProcessor(handler));

@@ -17,12 +17,13 @@ CPPFLAGS=$(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords
 
 INCLUDES=-I. \
 		-I../gen-cpp  \
+		-I../../clib/  \
 		-I/usr/local/include/ \
 		-I/usr/local/include/event2/
 
 #LDFLAGS=-L/usr/local/lib -lthrift -lthrift_c_glib -lthriftnb -lthriftz -levent -lpthread
 #LDFLAGS=-L/usr/local/lib -lthrift -lthriftnb -lthriftz -levent -lpthread
-LDFLAGS=-L/usr/local/lib -lthrift -lthriftnb -levent -lpthread
+LDFLAGS=../../clib/libclib.a -L/usr/local/lib -lthrift -lthriftnb -levent -L/usr/lib64/boost148/ -lboost_thread-mt -lboost_thread -lboost_system-mt -lpthread
 
 DIRNAME=$(shell basename `pwd`)
 
@@ -34,6 +35,7 @@ endif
 
 RTFLAGS=$(RPATH)=. \
 		$(RPATH)=/usr/local/lib \
+		$(RPATH)=/usr/lib64/boost148/ \
 
 DIRS := . ../gen-cpp
 SRCS := $(foreach d, $(DIRS), $(wildcard $(d)/*.cpp))

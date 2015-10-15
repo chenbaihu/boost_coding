@@ -15,6 +15,11 @@ using std::string;
 
 #ifdef DAsyncMapCli
 
+namespace clib {
+    class EventThread;
+    typedef boost::shared_ptr<EventThread> EventThreadPtr;
+}
+
 namespace apache { namespace thrift { 
     namespace transport { 
         class TSocket; 
@@ -29,8 +34,6 @@ namespace apache { namespace thrift {
     } // apache::thrift::async
 }} // apache::thrift
 
-struct event_base;
-
 typedef boost::shared_ptr<apache::thrift::transport::TSocket>    TSocketPtr;
 typedef boost::shared_ptr<apache::thrift::transport::TTransport> TTransportPtr;
 typedef boost::shared_ptr<apache::thrift::protocol::TProtocol>   TProtocolPtr;
@@ -44,9 +47,9 @@ class ComputeResp;
 
 class AsyncMapCli {
 public:
-    typedef std::tr1::function<void(const ComputeResp& crsp)> CallBack;
+    typedef std::tr1::function<void(int ret, const ComputeResp& crsp)> CallBack;
 public:
-    AsyncMapCli(event_base* _evbase, 
+    AsyncMapCli(clib::EventThreadPtr _eventThreadPtr, 
             char* _ip, uint16_t _port, 
             uint16_t _conn_timeout=100/*ms*/, 
             uint16_t _send_timeout=100/*ms*/, 
@@ -54,13 +57,18 @@ public:
     ~AsyncMapCli();
 
     //TODO use template function merge Compute Write
-    bool Compute(const ComputeReq& creq, CallBack cb); 
+    void Compute(const ComputeReq& creq, CallBack cb); 
+
+private:
+    void ComputeHandle(const ComputeReq& creq, CallBack cb); 
+
 private:
     bool Open();
     static void Cob(MapServiceCobClient* client, CallBack cb);
 
 private:
-    event_base*         evbase;
+    clib::EventThreadPtr      eventThreadPtr;
+    
     std::string         ip;
     uint16_t            port;
     uint16_t            conn_timeout;
