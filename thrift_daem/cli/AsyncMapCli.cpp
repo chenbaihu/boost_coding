@@ -84,7 +84,9 @@ void AsyncMapCli::Cob(MapServiceCobClient* client, CallBack cb)
         ret = 0;
     } catch (TException& tx) {
         fprintf(stderr, "Cob\t"
+                    "pid=%ld\t"
                     "failed,tw.what=%s\n",
+                    pthread_self(), 
                     tx.what());
         ret = -2;
     }
