@@ -59,12 +59,14 @@ public:
     //TODO use template function merge Compute Write
     void Compute(const ComputeReq& creq, CallBack cb); 
 
+public:
+    std::string get_cliInfo() { return cliInfo.str(); }
 private:
     void ComputeHandle(const ComputeReq& creq, CallBack cb); 
 
 private:
     bool Open();
-    static void Cob(MapServiceCobClient* client, CallBack cb);
+    static void Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, CallBack cb);
 
 private:
     clib::EventThreadPtr      eventThreadPtr;

@@ -72,7 +72,7 @@ bool AsyncMapCli::Open()
     return true;
 } /*}}}*/
 
-void AsyncMapCli::Cob(MapServiceCobClient* client, CallBack cb)
+void AsyncMapCli::Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, CallBack cb)
 { /*{{{*/
     int ret = -1;
     ComputeResp crsp;
@@ -85,8 +85,10 @@ void AsyncMapCli::Cob(MapServiceCobClient* client, CallBack cb)
     } catch (TException& tx) {
         fprintf(stderr, "Cob\t"
                     "pid=%ld\t"
+                    "info=%s\t"
                     "failed,tw.what=%s\n",
-                    pthread_self(), 
+                    pthread_self(),
+                    asyncMapCli->get_cliInfo().c_str(), 
                     tx.what());
         ret = -2;
     }
@@ -117,7 +119,7 @@ void AsyncMapCli::ComputeHandle(const ComputeReq& creq, CallBack cb)
     }
  
     try {
-        cobClientPtr->compute(boost::bind(&AsyncMapCli::Cob, _1, cb), creq);
+        cobClientPtr->compute(boost::bind(&AsyncMapCli::Cob, _1, this, cb), creq);
     } catch (TException& tx) { 
         fprintf(stderr, "Compute\t"
                 "cliInfo=%s\t"

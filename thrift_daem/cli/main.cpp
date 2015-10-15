@@ -51,8 +51,13 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::string> ips;
     ips.push_back("127.0.0.1");
+    ips.push_back("127.0.0.1");
+    ips.push_back("127.0.0.1");
+    ips.push_back("127.0.0.1");
     std::vector<uint16_t>    ports;
     ports.push_back(23456);
+    ports.push_back(23457);
+    ports.push_back(23458);
     uint16_t connTimeOut=1000;
     uint16_t sendTimeOut=1000;
     uint16_t recvTimeOut=1000;
@@ -65,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     while (true) {
         asyncMapCliMgn.Compute(creq, std::tr1::bind(&ShowRsp, std::tr1::placeholders::_1, std::tr1::placeholders::_2));
-        usleep(100000);
+        usleep(10000);
     }
     #endif
     return 0;
