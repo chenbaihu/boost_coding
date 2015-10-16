@@ -5,6 +5,7 @@
 
 #include <tr1/functional>
 #include <tr1/memory>
+#include <stdint.h>
 #include <vector>
 
 namespace clib {

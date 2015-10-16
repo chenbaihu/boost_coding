@@ -1,12 +1,38 @@
 #include "EventThread.h"
 #include "EventWatcher.h"
 
+#include "AsyncIoJob.h"
 #include "Log.h"
+
+#include <assert.h>
+#include <event.h>
 
 namespace clib {
 
-using namespace std;
-using namespace boost;
+//void DoTaskInEventThread(AsyncIoJob *job)
+//{ /*{{{*/
+//    if(NULL == job) return;
+//    set_uuid(job->log_id);
+//    job->status = RUNNING;
+//    switch(job->type)
+//    {
+//        case THREAD_JOB:
+//            {
+//                thread_job_params& t_job = job->params.p_thread_job;
+//                t_job.worker_func(t_job.args);
+//                job->status = COMPLETE;
+//                sem_post(job->client_sem);
+//                break;               
+//            }
+//
+//        default:
+//            log_warn("job type error: %d", job->type);
+//            sem_post(job->client_sem);
+//    }
+//    log_notice("DoTaskInEventThread\ttid=%ld", pthread_self());
+//} /*}}}*/
+
+//using namespace boost;
 
 const int kDefaultQueueSize = 1024;
 
@@ -16,6 +42,7 @@ EventThread::EventThread(bool detach)
     , running_(false)
     , detach_(detach)
 {
+    this->mutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
 EventThread::~EventThread() {
@@ -68,28 +95,34 @@ bool EventThread::Start()
         return false;
     }
 
-    thread_.reset(new boost::thread(std::tr1::bind(&EventThread::Main, this)));
+    //thread_.reset(new boost::thread(std::tr1::bind(&EventThread::Main, this)));
+    pthread_create(&tid, NULL, Main, this);
     if (detach_) {
-        thread_->detach();
+        //thread_->detach();
+        pthread_detach(tid);
     }
 
     running_ = true;
     return true;
 }
 
-boost::thread::id EventThread::id() const 
-{
-    assert(event_base_);
-    assert(running_);
-    return thread_->get_id();
-}
+//boost::thread::id EventThread::id() const 
+//{
+//    assert(event_base_);
+//    assert(running_);
+//    return thread_->get_id();
+//}
 
 void EventThread::Stop() 
 {
     if (running_) {
         running_ = false;
         stop_watcher_->Notify();
-        thread_->join();
+        //thread_->join();
+        
+        void *ret = NULL;
+        pthread_join(tid, &ret);
+        log_notice("Stop\ttid=%ld", tid);
     }
 }
 
@@ -115,7 +148,8 @@ bool EventThread::AddTask(TaskPtr task)
     bool need_notify = false;
     
     {
-        boost::mutex::scoped_lock lock(tasks_mutex_);
+        //boost::mutex::scoped_lock lock(tasks_mutex_);
+        pthread_mutex_lock(&this->mutex); 
         if (tasks_.empty()) 
         {
             need_notify = true;
@@ -125,6 +159,7 @@ bool EventThread::AddTask(TaskPtr task)
             return false;
         }
         tasks_.push_back(task);
+        pthread_mutex_unlock(&this->mutex);
     }
 
     if (need_notify) {
@@ -138,8 +173,10 @@ void EventThread::HandleTask()
     std::vector<TaskPtr> tasks;
 
     {
-        boost::mutex::scoped_lock lock(tasks_mutex_);
+        //boost::mutex::scoped_lock lock(tasks_mutex_);
+        pthread_mutex_lock(&this->mutex); 
         tasks.swap(tasks_);
+        pthread_mutex_unlock(&this->mutex);
     }
 
     size_t task_size = tasks.size();
@@ -148,9 +185,11 @@ void EventThread::HandleTask()
     }
 }
 
-void EventThread::Main() 
+void* EventThread::Main(void* arg) 
 {
-    event_base_loop(event_base_, 0);
+    EventThread* et = (EventThread*)arg;
+    event_base_loop(et->event_base_, 0);
+    return NULL;
 }
 
 } // namespace clib 

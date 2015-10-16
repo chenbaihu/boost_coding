@@ -101,9 +101,9 @@ void PipedEventWatcher::HandlerFn(int fd, short which, void *v)
     char buf[128];
     ssize_t n = 0;
     if ((n = recv(h->pipe_[1], buf, sizeof(buf), 0)) < 0) {
-        print_error_info("Recv notify failed: %s", strerror(errno));
+        log_error("Recv notify failed: %s", strerror(errno));
     } else if (n == 0) {
-        print_error_info("Notify fd closed.");
+        log_error("Notify fd closed.");
     } else {
         h->handler_();
     }

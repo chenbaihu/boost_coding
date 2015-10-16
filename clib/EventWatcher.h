@@ -7,11 +7,9 @@
 #include <event.h>
 #include <event_struct.h>
 
-#include <boost/noncopyable.hpp>
-
 namespace clib {
 
-class EventWatcher : private boost::noncopyable 
+class EventWatcher  
 {
 public:
     typedef std::tr1::function<void()> Handler;
