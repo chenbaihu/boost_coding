@@ -26,7 +26,9 @@ AsyncMapCli::AsyncMapCli(clib::EventThreadPtr _eventThreadPtr,
     conn_timeout(_conn_timeout), 
     send_timeout(_send_timeout), 
     recv_timeout(_recv_timeout), 
-    init(false) 
+    init(false), 
+    wait_to_do_task_num(0),
+    max_wait_to_do_task_num(1000)
 {
     cliInfo 
         << "ip="              << ip           << "\t"
@@ -76,8 +78,16 @@ bool AsyncMapCli::Open()
     return true;
 } /*}}}*/
 
+//bool AsyncMapCli::Close() 
+//{ /*{{{*/ 
+//    tBinaryProtocolFactoryPtr.reset();
+//    cobClientPtr.reset();
+//    tAsyncChannelPtr.reset();
+//} /*}}}*/
+
 void AsyncMapCli::Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, CallBack cb)
 { /*{{{*/
+    asyncMapCli->Dec();
     int ret = -1;
     ComputeResp crsp;
     if (client==NULL) {
@@ -101,8 +111,15 @@ void AsyncMapCli::Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, Cal
 
 void AsyncMapCli::Compute(const ComputeReq& creq, CallBack cb)
 { /*{{{*/
+    if (TaskNum()>max_wait_to_do_task_num) {
+        ComputeResp crsp;
+        cb(-4, crsp);  //满了
+        //TODO 如果时间长了，关闭，重新来
+        return;
+    }
     clib::EventThread::TaskPtr task(new clib::EventThread::Task(boost::bind(&AsyncMapCli::ComputeHandle, this, creq, cb)));
     eventThreadPtr->AddTask(task);
+    Inc();
 } /*}}}*/
 
 void AsyncMapCli::ComputeHandle(const ComputeReq& creq, CallBack cb) 

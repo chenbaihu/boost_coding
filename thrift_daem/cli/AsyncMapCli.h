@@ -69,7 +69,13 @@ private:
 
 private:
     bool Open();
+    bool Close();
     static void Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, CallBack cb);
+
+private:
+    int64_t TaskNum() { return wait_to_do_task_num; }
+    int64_t Inc() { return __sync_fetch_and_add(&wait_to_do_task_num, 1); }
+    int64_t Dec() { return __sync_fetch_and_add(&wait_to_do_task_num, -1); }
 
 private:
     clib::EventThreadPtr      eventThreadPtr;
@@ -80,6 +86,8 @@ private:
     uint16_t            send_timeout;
     uint16_t            recv_timeout;
     bool                init; 
+    int64_t             wait_to_do_task_num;
+    int64_t             max_wait_to_do_task_num;
     
     std::stringstream   cliInfo;
     
