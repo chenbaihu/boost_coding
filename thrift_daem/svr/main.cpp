@@ -8,6 +8,7 @@
 
 #include "thrift/server/TSimpleServer.h"
 #include "thrift/server/TNonblockingServer.h"
+#include "thrift/server/TThreadPoolServer.h"
 
 #include "thrift/transport/TServerSocket.h"
 #include "thrift/transport/TBufferTransports.h"
@@ -45,30 +46,48 @@ int main()
     
     #else 
 
-    shared_ptr<MapServiceHandler> handler(new MapServiceHandler());
-    shared_ptr<TProcessor>        processor(new MapServiceProcessor(handler));
-    shared_ptr<TServerTransport>  serverTransport(new TServerSocket(nPort));
-    shared_ptr<TTransportFactory> transportFactory(new THttpServerTransportFactory());
-    shared_ptr<TProtocolFactory>  protocolFactory(new TBinaryProtocolFactory());
- 
-    TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
-    server.serve();
+    //boost::shared_ptr<MapServiceHandler> handler(new MapServiceHandler());
+    //boost::shared_ptr<TProcessor>        processor(new MapServiceProcessor(handler));
+    //boost::shared_ptr<TTransportFactory> transportFactory(new THttpServerTransportFactory());
+    //boost::shared_ptr<TProtocolFactory>  protocolFactory(new TBinaryProtocolFactory());
+    //boost::shared_ptr<TServerTransport>  serverTransport(new TServerSocket(nPort));
+    //TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+    //server.serve();
 
     //boost::shared_ptr<MapServiceHandler> handler(new MapServiceHandler());
     //boost::shared_ptr<TProcessor>        processor(new MapServiceProcessor(handler));                                                                 
     //boost::shared_ptr<TProtocolFactory>  protocolFactory(new TBinaryProtocolFactory());       
-    //boost::shared_ptr<ThreadManager>     threadManager = ThreadManager::newSimpleThreadManager(nThreadNum); 
 
     //boost::shared_ptr<PosixThreadFactory> threadFactory = boost::shared_ptr<PosixThreadFactory>(
     //        new PosixThreadFactory(apache::thrift::concurrency::PosixThreadFactory::ROUND_ROBIN,
     //                apache::thrift::concurrency::PosixThreadFactory::NORMAL,
     //                THREAD_STACK_SIZE)
     //        );
+    //boost::shared_ptr<ThreadManager>     threadManager = ThreadManager::newSimpleThreadManager(nThreadNum); 
     //threadManager->threadFactory(threadFactory);
     //threadManager->start();
 
-    //TNonblockingServer server(processor, protocolFactory, nPort, threadManager);
+    //TNonblockingServer server(processor, protocolFactory, nPort, threadManager); 
     //server.serve();
+    
+    boost::shared_ptr<MapServiceHandler> handler(new MapServiceHandler());
+    boost::shared_ptr<TProcessor>        processor(new MapServiceProcessor(handler));
+    boost::shared_ptr<TServerTransport>  serverTransport(new TServerSocket(nPort));
+    boost::shared_ptr<TTransportFactory> transportFactory(new THttpServerTransportFactory());
+    boost::shared_ptr<TProtocolFactory>  protocolFactory(new TBinaryProtocolFactory());
+
+    boost::shared_ptr<PosixThreadFactory> threadFactory = boost::shared_ptr<PosixThreadFactory>(
+            new PosixThreadFactory(apache::thrift::concurrency::PosixThreadFactory::ROUND_ROBIN,
+                    apache::thrift::concurrency::PosixThreadFactory::NORMAL,
+                    THREAD_STACK_SIZE)
+            );
+    boost::shared_ptr<ThreadManager>     threadManager = ThreadManager::newSimpleThreadManager(nThreadNum); 
+    threadManager->threadFactory(threadFactory);
+    threadManager->start();
+
+    ::apache::thrift::server::TThreadPoolServer server(processor, serverTransport, transportFactory, protocolFactory, threadManager);
+    server.setTimeout(1000);
+    server.serve();
     #endif
     return 0;
 }

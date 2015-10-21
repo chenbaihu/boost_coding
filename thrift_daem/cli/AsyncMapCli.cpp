@@ -45,8 +45,11 @@ AsyncMapCli::~AsyncMapCli()
 
 bool AsyncMapCli::Open() 
 { /*{{{*/
-    if (init) {
-        return true;
+    if (init) { 
+        if (tAsyncChannelPtr->good()) {
+            return true;
+        }
+        init = false;
     }
 
     if (ip.empty() || port==0 || conn_timeout==0 
