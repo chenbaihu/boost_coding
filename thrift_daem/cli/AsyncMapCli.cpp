@@ -66,9 +66,9 @@ bool AsyncMapCli::Open()
         }
     }
 
-    tProtocolFactory.reset(new TBinaryProtocolFactory());
+    tBinaryProtocolFactoryPtr.reset(new TBinaryProtocolFactory());
     tAsyncChannelPtr.reset(new TEvhttpClientChannel(ip.c_str(), "/", ip.c_str(), port, eventThreadPtr->event_base()));
-    cobClientPtr.reset(new MapServiceCobClient(tAsyncChannelPtr, tProtocolFactory.get()));
+    cobClientPtr.reset(new MapServiceCobClient(tAsyncChannelPtr, tBinaryProtocolFactoryPtr.get()));
     init = true;
     return true;
 } /*}}}*/

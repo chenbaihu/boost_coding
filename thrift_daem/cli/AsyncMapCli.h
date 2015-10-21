@@ -13,11 +13,13 @@ using std::string;
 
 #include <stdint.h>
 
+#include <thrift/protocol/TBinaryProtocol.h>
+
 #ifdef DAsyncMapCli
 
 namespace clib {
     class EventThread;
-    typedef boost::shared_ptr<EventThread> EventThreadPtr;
+    typedef std::tr1::shared_ptr<EventThread> EventThreadPtr;
 }
 
 namespace apache { namespace thrift { 
@@ -37,6 +39,7 @@ namespace apache { namespace thrift {
 typedef boost::shared_ptr<apache::thrift::transport::TSocket>    TSocketPtr;
 typedef boost::shared_ptr<apache::thrift::transport::TTransport> TTransportPtr;
 typedef boost::shared_ptr<apache::thrift::protocol::TProtocol>   TProtocolPtr;
+typedef boost::shared_ptr<apache::thrift::protocol::TBinaryProtocolFactory>   TBinaryProtocolFactoryPtr;
 typedef boost::shared_ptr<apache::thrift::async::TAsyncChannel>  TAsyncChannelPtr;
 typedef boost::shared_ptr<apache::thrift::async::TEvhttpClientChannel>   TEvhttpClientChannelPtr;
 
@@ -79,10 +82,10 @@ private:
     bool                init; 
     
     std::stringstream   cliInfo;
-
-    TProtocolPtr           tProtocolFactory;
-    TAsyncChannelPtr       tAsyncChannelPtr;
-    MapServiceCobClientPtr cobClientPtr; 
+    
+    TBinaryProtocolFactoryPtr tBinaryProtocolFactoryPtr;    
+    TAsyncChannelPtr          tAsyncChannelPtr;
+    MapServiceCobClientPtr    cobClientPtr; 
 }; 
 typedef std::tr1::shared_ptr<AsyncMapCli> AsyncMapCliPtr; 
 typedef std::vector<AsyncMapCliPtr>       AsyncMapCliPtrVec;
