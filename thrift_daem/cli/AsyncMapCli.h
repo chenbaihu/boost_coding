@@ -80,6 +80,7 @@ private:
     
     std::stringstream   cliInfo;
 
+    TProtocolPtr           tProtocolFactory;
     TAsyncChannelPtr       tAsyncChannelPtr;
     MapServiceCobClientPtr cobClientPtr; 
 }; 
