@@ -23,7 +23,7 @@ public:
 
 public:
     bool Init();
-    void Compute(const ComputeReq& creq, AsyncMapCli::CallBack cb); 
+    void Compute(const ComputeReqWithTimeOutPtr& creq_ptr, AsyncMapCli::CallBack cb); 
 
 private:
     clib::EventThreadPoolPtr eventThreadPoolPtr;

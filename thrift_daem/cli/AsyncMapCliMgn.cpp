@@ -56,17 +56,18 @@ bool AsyncMapCliMgn::Init()
     return true;
 }
 
-void AsyncMapCliMgn::Compute(const ComputeReq& creq, AsyncMapCli::CallBack cb)
+void AsyncMapCliMgn::Compute(const ComputeReqWithTimeOutPtr& creq_ptr, AsyncMapCli::CallBack cb)
 {
     if (asyncMapCliPtrVec.empty()) {
-        ComputeResp crsp;
-        cb(-3, crsp);
+        ComputeRespWithErrorCode crsp;
+        crsp.ret = -3;
+        cb(crsp);
         return;
     }
 
     int i = random()%asyncMapCliPtrVec.size();
     AsyncMapCliPtr asyncMapCliPtr = asyncMapCliPtrVec[i];
-    asyncMapCliPtr->Compute(creq, cb);
+    asyncMapCliPtr->Compute(creq_ptr, cb);
     return;
 }
 

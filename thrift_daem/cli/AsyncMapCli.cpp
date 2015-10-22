@@ -85,17 +85,17 @@ bool AsyncMapCli::Open()
 //    tAsyncChannelPtr.reset();
 //} /*}}}*/
 
-void AsyncMapCli::Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, CallBack cb)
+void AsyncMapCli::Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb)
 { /*{{{*/
     asyncMapCli->Dec();
-    int ret = -1;
-    ComputeResp crsp;
+    ComputeRespWithErrorCode crsp;
     if (client==NULL) {
-        cb(ret, crsp);
+        crsp.ret = kNoConnect;
+        cb(crsp);
     }
     try {
-        client->recv_compute(crsp);
-        ret = 0;
+        client->recv_compute(crsp.crsp);
+        crsp.ret = kOK;
     } catch (TException& tx) {
         fprintf(stderr, "Cob\t"
                     "pid=%ld\t"
@@ -104,25 +104,27 @@ void AsyncMapCli::Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, Cal
                     pthread_self(),
                     asyncMapCli->get_cliInfo().c_str(), 
                     tx.what());
-        ret = -2;
+        crsp.ret = kUnknown;
     }
-    cb(ret, crsp);
+    cb(crsp);
 } /*}}}*/
 
-void AsyncMapCli::Compute(const ComputeReq& creq, CallBack cb)
+void AsyncMapCli::Compute(const ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb)
 { /*{{{*/
     if (TaskNum()>max_wait_to_do_task_num) {
-        ComputeResp crsp;
-        cb(-4, crsp);  //满了
+        ComputeRespWithErrorCode crsp;
+        crsp.ret = kConnectErr;
+        cb(crsp);  //满了
         //TODO 如果时间长了，关闭，重新来
         return;
     }
-    clib::EventThread::TaskPtr task(new clib::EventThread::Task(boost::bind(&AsyncMapCli::ComputeHandle, this, creq, cb)));
+    creq_ptr->status = kBeg;
+    clib::EventThread::TaskPtr task(new clib::EventThread::Task(boost::bind(&AsyncMapCli::ComputeHandle, this, creq_ptr, cb)));
     eventThreadPtr->AddTask(task);
     Inc();
 } /*}}}*/
 
-void AsyncMapCli::ComputeHandle(const ComputeReq& creq, CallBack cb) 
+void AsyncMapCli::ComputeHandle(const ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb) 
 { /*{{{*/
     if (!Open()) { 
         fprintf(stderr, "Compute\t"
@@ -132,15 +134,15 @@ void AsyncMapCli::ComputeHandle(const ComputeReq& creq, CallBack cb)
                 "didList.size=%ld\t" 
                 "Open failed\n",
                 cliInfo.str().c_str(), 
-                creq.mapsplitId,
-                creq.oidList.size(), 
-                creq.didList.size());
+                creq_ptr->creq.mapsplitId,
+                creq_ptr->creq.oidList.size(), 
+                creq_ptr->creq.didList.size());
         //return false;
         return;
     }
  
     try {
-        cobClientPtr->compute(boost::bind(&AsyncMapCli::Cob, _1, this, cb), creq);
+        cobClientPtr->compute(boost::bind(&AsyncMapCli::Cob, _1, this, creq_ptr, cb), creq_ptr->creq);
     } catch (TException& tx) { 
         fprintf(stderr, "Compute\t"
                 "cliInfo=%s\t"
@@ -149,9 +151,9 @@ void AsyncMapCli::ComputeHandle(const ComputeReq& creq, CallBack cb)
                 "didList.size=%ld\t"
                 "failed,tw.what=%s\n",
                 cliInfo.str().c_str(), 
-                creq.mapsplitId, 
-                creq.oidList.size(), 
-                creq.didList.size(), 
+                creq_ptr->creq.mapsplitId, 
+                creq_ptr->creq.oidList.size(), 
+                creq_ptr->creq.didList.size(), 
                 tx.what());
         //return false;
         return;

@@ -14,13 +14,46 @@ using std::string;
 #include <stdint.h>
 
 #include <thrift/protocol/TBinaryProtocol.h>
+#include "map_types.h"
 
 #ifdef DAsyncMapCli
 
 namespace clib {
     class EventThread;
-    typedef std::tr1::shared_ptr<EventThread> EventThreadPtr;
+    typedef std::tr1::shared_ptr<EventThread>  EventThreadPtr;
+    class EventWatcher;
+    typedef std::tr1::shared_ptr<EventWatcher> EventWatcherPtr;
 }
+
+enum ReqStatus {
+    kBeg     = 0,
+    kEnd     = 1,
+};
+typedef struct ComputeReqWithTimeOut { 
+    ReqStatus  status;
+    ComputeReq creq;
+    clib::EventWatcherPtr eventWatcherPtr; 
+    ComputeReqWithTimeOut() {
+        status = kBeg;
+    }
+} ComputeReqWithTimeOut;
+typedef std::tr1::shared_ptr<ComputeReqWithTimeOut> ComputeReqWithTimeOutPtr;
+
+enum RspErrorCode {
+    kOK         = 0,
+    kNoConnect  = 1,
+    kTimeOut    = 2,
+    kConnectErr = 3,
+    kUnknown    = 4, 
+};
+typedef struct ComputeRespWithErrorCode {
+    int ret;
+    ComputeResp crsp;
+    ComputeRespWithErrorCode() {
+        ret = kOK;
+    }
+} ComputeRespWithErrorCode;
+typedef std::tr1::shared_ptr<ComputeRespWithErrorCode> ComputeRespWithErrorCodePtr;
 
 namespace apache { namespace thrift { 
     namespace transport { 
@@ -45,12 +78,10 @@ typedef boost::shared_ptr<apache::thrift::async::TEvhttpClientChannel>   TEvhttp
 
 class MapServiceCobClient; 
 typedef boost::shared_ptr<MapServiceCobClient> MapServiceCobClientPtr; 
-class ComputeReq; 
-class ComputeResp;
 
 class AsyncMapCli {
 public:
-    typedef std::tr1::function<void(int ret, const ComputeResp& crsp)> CallBack;
+    typedef std::tr1::function<void(const ComputeRespWithErrorCode& crsp)> CallBack;
 public:
     AsyncMapCli(clib::EventThreadPtr _eventThreadPtr, 
             char* _ip, uint16_t _port, 
@@ -60,17 +91,18 @@ public:
     ~AsyncMapCli();
 
     //TODO use template function merge Compute Write
-    void Compute(const ComputeReq& creq, CallBack cb); 
+    void Compute(const ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb); 
 
 public:
     std::string get_cliInfo() { return cliInfo.str(); }
+
 private:
-    void ComputeHandle(const ComputeReq& creq, CallBack cb); 
+    void ComputeHandle(const ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb); 
 
 private:
     bool Open();
     bool Close();
-    static void Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, CallBack cb);
+    static void Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb);
 
 private:
     int64_t TaskNum() { return wait_to_do_task_num; }

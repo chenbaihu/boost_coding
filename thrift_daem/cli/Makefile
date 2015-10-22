@@ -36,6 +36,7 @@ endif
 RTFLAGS=$(RPATH)=. \
 		$(RPATH)=/usr/local/lib \
 		$(RPATH)=/usr/lib64/boost148/ \
+		$(RPATH)=./usr_local_lib \
 
 DIRS := . ../gen-cpp
 SRCS := $(foreach d, $(DIRS), $(wildcard $(d)/*.cpp))
