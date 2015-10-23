@@ -5,6 +5,9 @@
 #include <stdio.h>
 
 #ifndef DAsyncMapCli
+#include <stdint.h>
+extern uint64_t g_total_recv; 
+extern void StatisHandle();
 
 MapServiceHandler::MapServiceHandler()
 {
@@ -14,6 +17,10 @@ MapServiceHandler::MapServiceHandler()
 
 void MapServiceHandler::compute(ComputeResp& _return, const ComputeReq& req) 
 {
+    __sync_fetch_and_add(&g_total_recv, 1);
+    StatisHandle();
+
+    #ifdef PRINT
     fprintf(stdout, 
             "req.cityId=%d\t"
             "creq.oidList.size=%ld\t"
@@ -21,6 +28,7 @@ void MapServiceHandler::compute(ComputeResp& _return, const ComputeReq& req)
             req.cityId, 
             req.oidList.size(), 
             req.didList.size()); 
+    #endif
 
     _return.type = OrderType::COMMONORDER;
     _return.data = std::string("hello client");

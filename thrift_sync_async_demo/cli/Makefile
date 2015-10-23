@@ -10,6 +10,7 @@ PARENT_DIRNAME=$(shell basename $(shell dirname $(CURRENT_DIR)))
 SOURCE_DIR=$(CURRENT_DIR)/src
 #PREFIX=${CURRENT_DIR}/../../../install
 PREFIX=${CURRENT_DIR}/../
+DEBUG_FLAGS=-g -DDAsyncMapCli -DPRINT
 DEBUG_FLAGS=-g -DDAsyncMapCli 
 CFLAGS=$(DEBUG_FLAGS) -O2 -fPIC -Wshadow -Wcast-qual -Wcast-align \
 	   -Wwrite-strings -Wsign-compare -Winvalid-pch -fms-extensions -Wall 
@@ -23,7 +24,7 @@ INCLUDES=-I. \
 
 #LDFLAGS=-L/usr/local/lib -lthrift -lthrift_c_glib -lthriftnb -lthriftz -levent -lpthread
 #LDFLAGS=-L/usr/local/lib -lthrift -lthriftnb -lthriftz -levent -lpthread
-LDFLAGS=../../clib/libclib.a -L/usr/local/lib -lthrift -lthriftnb -levent -L/usr/lib64/boost148/ -lboost_thread-mt -lboost_thread -lboost_system-mt -lpthread
+LDFLAGS=../../clib/libclib.a -L/usr/local/lib -lthrift -lthriftnb -levent -L/usr/lib64/boost148/ -lboost_thread-mt -lboost_thread -lboost_system-mt -lgflags -lpthread
 
 DIRNAME=$(shell basename `pwd`)
 
@@ -82,5 +83,5 @@ install: $(TARGET)
 	cp -f $(TARGET) $(PREFIX)/
 
 clean:
-	rm -rf *.o *.d $(OBJS) $(DEPS) $(TARGET) 
+	rm -rf *.o *.d core.* $(OBJS) $(DEPS) $(TARGET) 
 

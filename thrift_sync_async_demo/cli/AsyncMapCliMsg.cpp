@@ -43,10 +43,10 @@ bool ComputeReqWithTimeOut::Init()
 
 bool ComputeReqWithTimeOut::UnInit() 
 {
-    cobClientPtr.reset();
     tAsyncChannelPtr.reset();
     tBinaryProtocolFactoryPtr.reset();
-    eventWatcherPtr.reset();
+    cobClientPtr.reset();
+    //eventWatcherPtr.reset();
     return true;
 }
 
@@ -117,17 +117,20 @@ void ComputeReqWithTimeOut::Cob(MapServiceCobClient* client, CallBack cb)
         crsp.ret = kTimeOut;
         cb(crsp);
         UnInit();
+        return;
     }
 
     try {
         client->recv_compute(crsp.crsp);
         crsp.ret = kOK;
-    } catch (TException& tx) {
+    } catch (TException& tx) { 
+        #ifdef PRINT
         fprintf(stderr, "Cob\t"
                     "pid=%ld\t"
                     "failed,tw.what=%s\n",
                     pthread_self(),
                     tx.what());
+        #endif
         crsp.ret = kUnknown;
     }
     cb(crsp);

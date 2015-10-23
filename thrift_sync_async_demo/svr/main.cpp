@@ -30,6 +30,20 @@ using namespace ::apache::thrift::async;
 using boost::shared_ptr;
 
 #define THREAD_STACK_SIZE 64 //MB
+#include <stdint.h>
+uint64_t g_total_recv = 0; 
+void StatisHandle() 
+{ 
+    static time_t last_print_time = time(NULL);
+    static uint64_t last_total_recv = 0;
+    time_t cur_time = time(NULL);
+    if (cur_time-last_print_time>=1) {
+        uint32_t recv_per_second = (uint32_t)(g_total_recv-last_total_recv);
+        last_total_recv = g_total_recv;
+        last_print_time = cur_time;
+        fprintf(stdout, "recv_per_second=%lu\tg_total_recv=%llu\n", (unsigned long int)recv_per_second, (unsigned long long int)g_total_recv);
+    }
+}
 
 //启动map服务，nPort监听端口，nThreadNum工作线程数量
 int main()

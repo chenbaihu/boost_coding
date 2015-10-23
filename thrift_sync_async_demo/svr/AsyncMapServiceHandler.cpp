@@ -2,6 +2,9 @@
 #include <stdio.h>
 
 #ifdef DAsyncMapCli
+#include <stdint.h>
+extern uint64_t g_total_recv; 
+extern void StatisHandle();
 
 AsyncMapServiceHandler::AsyncMapServiceHandler()
 {
@@ -13,6 +16,10 @@ void AsyncMapServiceHandler::compute(
             tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, 
             const ComputeReq& req)
 {
+    __sync_fetch_and_add(&g_total_recv, 1);
+    StatisHandle();
+    
+    #ifdef PRINT
     fprintf(stdout, 
             "req.cityId=%d\t"
             "creq.oidList.size=%ld\t"
@@ -20,6 +27,7 @@ void AsyncMapServiceHandler::compute(
             req.cityId, 
             req.oidList.size(), 
             req.didList.size()); 
+    #endif
 
     ComputeResp _return;
     _return.type = OrderType::COMMONORDER;
