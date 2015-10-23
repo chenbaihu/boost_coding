@@ -5,6 +5,8 @@
 
 #include <tr1/functional>
 #include <tr1/memory>
+#include <vector>
+#include <stdint.h>
 
 namespace clib {
     class EventThreadPool;
@@ -23,7 +25,19 @@ public:
 
 public:
     bool Init();
-    void Compute(const ComputeReqWithTimeOutPtr& creq_ptr, AsyncMapCli::CallBack cb); 
+    AsyncMapCliPtr& GetNextAsyncMapCliPtr();
+    //void Compute(const ComputeReqWithTimeOutPtr& creq_ptr, AsyncMapCli::CallBack cb); 
+
+    //TODO 检车这些ip和port，哪些是ok的
+
+private:
+    uint64_t AtomicInc() {
+        if (asyncMapCliPtrVec.empty()) {
+            return 0;
+        }
+        uint64_t index = __sync_fetch_and_add(&atomic_index, 1);
+        return index%asyncMapCliPtrVec.size();
+    }
 
 private:
     clib::EventThreadPoolPtr eventThreadPoolPtr;
@@ -33,6 +47,7 @@ private:
     uint16_t                 connTimeOut;
     uint16_t                 sendTimeOut;
     uint16_t                 recvTimeOut;
+    uint64_t                 atomic_index;
 
     AsyncMapCliPtrVec        asyncMapCliPtrVec;
 };

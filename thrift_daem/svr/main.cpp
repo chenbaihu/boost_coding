@@ -18,6 +18,7 @@
 #include "thrift/async/TEvhttpServer.h"
 
 #include <stdio.h>
+#include <signal.h>
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -33,6 +34,7 @@ using boost::shared_ptr;
 //启动map服务，nPort监听端口，nThreadNum工作线程数量
 int main()
 {
+    signal(SIGPIPE, SIG_IGN);
     int nPort      = 23456; 
     int nThreadNum = 12;
 
@@ -76,18 +78,22 @@ int main()
     boost::shared_ptr<TTransportFactory> transportFactory(new THttpServerTransportFactory());
     boost::shared_ptr<TProtocolFactory>  protocolFactory(new TBinaryProtocolFactory());
 
-    boost::shared_ptr<PosixThreadFactory> threadFactory = boost::shared_ptr<PosixThreadFactory>(
-            new PosixThreadFactory(apache::thrift::concurrency::PosixThreadFactory::ROUND_ROBIN,
-                    apache::thrift::concurrency::PosixThreadFactory::NORMAL,
-                    THREAD_STACK_SIZE)
-            );
-    boost::shared_ptr<ThreadManager>     threadManager = ThreadManager::newSimpleThreadManager(nThreadNum); 
-    threadManager->threadFactory(threadFactory);
-    threadManager->start();
+    try {
+        boost::shared_ptr<PosixThreadFactory> threadFactory = boost::shared_ptr<PosixThreadFactory>(
+                    new PosixThreadFactory(apache::thrift::concurrency::PosixThreadFactory::ROUND_ROBIN,
+                        apache::thrift::concurrency::PosixThreadFactory::NORMAL,
+                        THREAD_STACK_SIZE)
+                    );
+        boost::shared_ptr<ThreadManager>     threadManager = ThreadManager::newSimpleThreadManager(nThreadNum); 
+        threadManager->threadFactory(threadFactory);
+        threadManager->start();
 
-    ::apache::thrift::server::TThreadPoolServer server(processor, serverTransport, transportFactory, protocolFactory, threadManager);
-    server.setTimeout(1000);
-    server.serve();
+        ::apache::thrift::server::TThreadPoolServer server(processor, serverTransport, transportFactory, protocolFactory, threadManager);
+        server.setTimeout(1000);
+        server.serve();
+    } catch (TException& tx) { 
+        fprintf(stderr, "failed,tw.what=%s\n", tx.what()); 
+    }
     #endif
     return 0;
 }

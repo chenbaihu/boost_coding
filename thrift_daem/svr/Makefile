@@ -33,6 +33,7 @@ endif
 
 RTFLAGS=$(RPATH)=. \
 		$(RPATH)=/usr/local/lib \
+		$(RPATH)=./usr_local_lib \
 
 DIRS := . ../gen-cpp
 SRCS := $(foreach d, $(DIRS), $(wildcard $(d)/*.cpp))

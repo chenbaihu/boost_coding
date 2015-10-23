@@ -46,9 +46,16 @@ bool AsyncMapCliMgn::Init()
         for (size_t ipi=0; ipi<ips.size(); ipi++) { 
             clib::EventThreadPtr eventThreadPtr = eventThreadPoolPtr->GetNextEventThread();
             if (eventThreadPtr==NULL) {
+                //TODO write log
+                fprintf(stderr, "Init eventThreadPtr==NULL failed\n");
                 return false;
             }
             AsyncMapCliPtr asyncMapCliPtr(new AsyncMapCli(eventThreadPtr, &(ips[ipi][0]), ports[porti], connTimeOut, sendTimeOut, recvTimeOut));
+            if (!asyncMapCliPtr->Init()) {
+                //TODO write log
+                fprintf(stderr, "Init asyncMapCliPtr->Init failed\n");
+                return false;
+            }
             asyncMapCliPtrVec[index] = asyncMapCliPtr;
             index++;
         }
@@ -56,19 +63,25 @@ bool AsyncMapCliMgn::Init()
     return true;
 }
 
-void AsyncMapCliMgn::Compute(const ComputeReqWithTimeOutPtr& creq_ptr, AsyncMapCli::CallBack cb)
+AsyncMapCliPtr& AsyncMapCliMgn::GetNextAsyncMapCliPtr() 
 {
-    if (asyncMapCliPtrVec.empty()) {
-        ComputeRespWithErrorCode crsp;
-        crsp.ret = -3;
-        cb(crsp);
-        return;
-    }
-
-    int i = random()%asyncMapCliPtrVec.size();
-    AsyncMapCliPtr asyncMapCliPtr = asyncMapCliPtrVec[i];
-    asyncMapCliPtr->Compute(creq_ptr, cb);
-    return;
+    uint64_t cli_index = AtomicInc();
+    return asyncMapCliPtrVec[cli_index];
 }
+
+//void AsyncMapCliMgn::Compute(const ComputeReqWithTimeOutPtr& creq_ptr, AsyncMapCli::CallBack cb)
+//{
+//    if (asyncMapCliPtrVec.empty()) {
+//        ComputeRespWithErrorCode crsp;
+//        crsp.ret = kEventErr;
+//        cb(crsp);
+//        return;
+//    }
+//
+//    int i = random()%asyncMapCliPtrVec.size();
+//    AsyncMapCliPtr asyncMapCliPtr = asyncMapCliPtrVec[i];
+//    asyncMapCliPtr->Compute(creq_ptr, cb);
+//    return;
+//}
 
 

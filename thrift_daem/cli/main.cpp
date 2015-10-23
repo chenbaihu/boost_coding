@@ -2,6 +2,7 @@
 #include "MapCli.h" 
 #else 
 #include "AsyncMapCliMgn.h" 
+#include "AsyncMapCliMsg.h" 
 #endif
 #include "map_types.h"
 #include "EventThreadPool.h"
@@ -14,13 +15,9 @@
 #include <assert.h>
 #include <signal.h>
 
-void ShowRsp(const ComputeReqWithTimeOutPtr creq_ptr, ComputeRespWithErrorCode crsp)
-{
-    if (creq_ptr->status != kBeg) {
-        return;
-    }
-    creq_ptr->status = kEnd;
-
+//void ShowRsp(ComputeReqWithTimeOutPtr creq_ptr, ComputeRespWithErrorCode crsp)
+void ShowRsp(ComputeRespWithErrorCode crsp)
+{ 
     if (crsp.ret!=0) {
         fprintf(stdout, "Compute failed, tid=%ld ret=%d\n", pthread_self(), crsp.ret);
         return;
@@ -98,7 +95,7 @@ int main(int argc, char* argv[]) {
     }
 
     while (true) { 
-        ComputeReqWithTimeOutPtr creq_ptr(new ComputeReqWithTimeOut);
+        ComputeReqWithTimeOutPtr creq_ptr(new ComputeReqWithTimeOut(asyncMapCliMgn.GetNextAsyncMapCliPtr()));
         ComputeReq& creq = creq_ptr->creq;
         creq.type   = OrderType::COMMONORDER;
         creq.jobId  = 0;
@@ -108,7 +105,8 @@ int main(int argc, char* argv[]) {
             creq.oidList.push_back(i);
             creq.didList.push_back(i*2);
         }
-        asyncMapCliMgn.Compute(creq_ptr, std::tr1::bind(&ShowRsp, creq_ptr, std::tr1::placeholders::_1));
+        //creq_ptr->Compute(std::tr1::bind(&ShowRsp, creq_ptr, std::tr1::placeholders::_1));
+        creq_ptr->Compute(std::tr1::bind(&ShowRsp, std::tr1::placeholders::_1));
         usleep(10000);
     }
     #endif

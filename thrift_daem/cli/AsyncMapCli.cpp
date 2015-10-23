@@ -1,14 +1,16 @@
 #include "AsyncMapCli.h"
 
-#include "MapService.h"             // /usr/local/bin/thrift -r -gen cpp idl/map.thrift  生成的文件中的一个
-
 #ifdef DAsyncMapCli
 #include "EventThread.h"
+#include "EventWatcher.h"
 
 #include "thrift/protocol/TBinaryProtocol.h"
 #include "thrift/transport/TSocket.h"
 #include "thrift/transport/TTransportUtils.h"
 #include "thrift/async/TEvhttpClientChannel.h"
+
+#include <sys/types.h>
+#include <sys/time.h>
 
 using namespace apache::thrift;
 using namespace apache::thrift::protocol;
@@ -25,10 +27,7 @@ AsyncMapCli::AsyncMapCli(clib::EventThreadPtr _eventThreadPtr,
     port(_port), 
     conn_timeout(_conn_timeout), 
     send_timeout(_send_timeout), 
-    recv_timeout(_recv_timeout), 
-    init(false), 
-    wait_to_do_task_num(0),
-    max_wait_to_do_task_num(1000)
+    recv_timeout(_recv_timeout) 
 {
     cliInfo 
         << "ip="              << ip           << "\t"
@@ -36,24 +35,14 @@ AsyncMapCli::AsyncMapCli(clib::EventThreadPtr _eventThreadPtr,
         << "conn_timeout_ms=" << conn_timeout << "\t" 
         << "send_timeout="    << send_timeout << "\t" 
         << "recv_timeout="    << recv_timeout;
-    Open();  //没有考虑成功还是失败
 }
 
 AsyncMapCli::~AsyncMapCli() 
 {
-    cobClientPtr.reset();
-    tAsyncChannelPtr.reset();
 } 
 
-bool AsyncMapCli::Open() 
+bool AsyncMapCli::Init() 
 { /*{{{*/
-    if (init) { 
-        if (tAsyncChannelPtr->good()) {
-            return true;
-        }
-        init = false;
-    }
-
     if (ip.empty() || port==0 || conn_timeout==0 
             || send_timeout==0 || recv_timeout==0) { 
         fprintf(stderr, "Open\t"
@@ -70,107 +59,14 @@ bool AsyncMapCli::Open()
             return false;
         }
     }
-
-    tBinaryProtocolFactoryPtr.reset(new TBinaryProtocolFactory());
-    tAsyncChannelPtr.reset(new TEvhttpClientChannel(ip.c_str(), "/", ip.c_str(), port, eventThreadPtr->event_base()));
-    cobClientPtr.reset(new MapServiceCobClient(tAsyncChannelPtr, tBinaryProtocolFactoryPtr.get()));
-    init = true;
     return true;
 } /*}}}*/
 
-//bool AsyncMapCli::Close() 
-//{ /*{{{*/ 
-//    tBinaryProtocolFactoryPtr.reset();
-//    cobClientPtr.reset();
-//    tAsyncChannelPtr.reset();
-//} /*}}}*/
-
-void AsyncMapCli::Cob(MapServiceCobClient* client, AsyncMapCli* asyncMapCli, ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb)
-{ /*{{{*/
-    asyncMapCli->Dec();
-    ComputeRespWithErrorCode crsp;
-    if (client==NULL) {
-        crsp.ret = kNoConnect;
-        cb(crsp);
-    }
-    try {
-        client->recv_compute(crsp.crsp);
-        crsp.ret = kOK;
-    } catch (TException& tx) {
-        fprintf(stderr, "Cob\t"
-                    "pid=%ld\t"
-                    "info=%s\t"
-                    "failed,tw.what=%s\n",
-                    pthread_self(),
-                    asyncMapCli->get_cliInfo().c_str(), 
-                    tx.what());
-        crsp.ret = kUnknown;
-    }
-    cb(crsp);
-} /*}}}*/
-
-void AsyncMapCli::Compute(const ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb)
-{ /*{{{*/
-    if (TaskNum()>max_wait_to_do_task_num) {
-        ComputeRespWithErrorCode crsp;
-        crsp.ret = kConnectErr;
-        cb(crsp);  //满了
-        //TODO 如果时间长了，关闭，重新来
-        return;
-    }
-    creq_ptr->status = kBeg;
-    clib::EventThread::TaskPtr task(new clib::EventThread::Task(boost::bind(&AsyncMapCli::ComputeHandle, this, creq_ptr, cb)));
+bool AsyncMapCli::AddTask(clib::EventThread::TaskPtr task)
+{
     eventThreadPtr->AddTask(task);
-    Inc();
-} /*}}}*/
-
-void AsyncMapCli::ComputeHandle(const ComputeReqWithTimeOutPtr& creq_ptr, CallBack cb) 
-{ /*{{{*/
-    if (!Open()) { 
-        fprintf(stderr, "Compute\t"
-                "cliInfo=%s\t" 
-                "sliceID=%d\t"
-                "oidList.size=%ld\t"
-                "didList.size=%ld\t" 
-                "Open failed\n",
-                cliInfo.str().c_str(), 
-                creq_ptr->creq.mapsplitId,
-                creq_ptr->creq.oidList.size(), 
-                creq_ptr->creq.didList.size());
-        //return false;
-        return;
-    }
- 
-    try {
-        cobClientPtr->compute(boost::bind(&AsyncMapCli::Cob, _1, this, creq_ptr, cb), creq_ptr->creq);
-    } catch (TException& tx) { 
-        fprintf(stderr, "Compute\t"
-                "cliInfo=%s\t"
-                "sliceID=%d\t" 
-                "oidList.size=%ld\t"
-                "didList.size=%ld\t"
-                "failed,tw.what=%s\n",
-                cliInfo.str().c_str(), 
-                creq_ptr->creq.mapsplitId, 
-                creq_ptr->creq.oidList.size(), 
-                creq_ptr->creq.didList.size(), 
-                tx.what());
-        //return false;
-        return;
-    }
-    //fprintf(stdout, "Compute\t"
-    //        "cliInfo=%s\t"
-    //        "sliceID=%u\t"
-    //        "oidList.size=%ld\t"
-    //        "didList.size=%ld\t" 
-    //        "succ\n", 
-    //        cliInfo.str().c_str(), 
-    //        (uint16_t)creq.mapsplitId, 
-    //        creq.oidList.size(), 
-    //        creq.didList.size());
-    //return true;
-    return;
-} /*}}}*/
+    return true;
+}
 
 #endif //#ifdef DAsyncMapCli
 
