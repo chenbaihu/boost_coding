@@ -7,10 +7,10 @@
 #include <errno.h>
 
 #include <vector>
-//#include <boost/shared_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 //#include <boost/scoped_ptr.hpp>
 //#include <boost/thread.hpp>
-//#include <boost/function.hpp>
+#include <boost/function.hpp>
 #include <tr1/functional>
 #include <tr1/memory>
 
@@ -26,10 +26,10 @@ class PipedEventWatcher;
 
 class EventThread {
 public:
-    //typedef boost::function<void()> Task;
-    typedef std::tr1::function<void()> Task;
-    //typedef boost::shared_ptr<Task> TaskPtr;
-    typedef std::tr1::shared_ptr<Task> TaskPtr;
+    typedef boost::function<void()> Task;
+    //typedef std::tr1::function<void()> Task;
+    typedef boost::shared_ptr<Task> TaskPtr;
+    //typedef std::tr1::shared_ptr<Task> TaskPtr;
 
 public:
     EventThread(bool detach = false);
@@ -60,8 +60,8 @@ private:
     //boost::scoped_ptr<PipedEventWatcher> stop_watcher_;
     std::tr1::shared_ptr<PipedEventWatcher> stop_watcher_;
 
-    //std::vector<boost::shared_ptr<Task> > tasks_;
-    std::vector<std::tr1::shared_ptr<Task> > tasks_;
+    std::vector<boost::shared_ptr<Task> > tasks_;
+    //std::vector<std::tr1::shared_ptr<Task> > tasks_;
 
     bool detach_;
     //boost::mutex tasks_mutex_;
