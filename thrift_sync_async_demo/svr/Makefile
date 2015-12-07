@@ -1,5 +1,3 @@
-# chenbaihu@didichuxing.com
-
 CC=gcc
 CXX=g++
 AR=ar
