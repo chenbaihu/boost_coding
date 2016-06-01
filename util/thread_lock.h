@@ -6,6 +6,16 @@
 
 namespace util {
 
+inline void TsAddMs(struct timespec *ts, long ms) 
+{
+	int sec = ms/1000;
+	ms = ms-sec*1000;
+
+	ts->tv_nsec += ms*1000000;
+	ts->tv_sec  += ts->tv_nsec/1000000000 + sec;
+	ts->tv_nsec  = ts->tv_nsec%1000000000;
+}
+
 class Mutex {
 protected:
     pthread_mutex_t lock_;
@@ -34,6 +44,46 @@ public:
     pthread_mutex_t& get_lock() {
         return lock_;
     }
+};
+
+class RWLock {
+private:
+	pthread_rwlock_t lock_;		
+
+public:
+	explicit RWLock(const pthread_rwlockattr_t* attr = NULL) {
+		::pthread_rwlock_init(&lock_, attr);
+	} 
+
+	~RWLock() { 
+		::pthread_rwlock_destroy(&lock_);
+	}
+
+	int rlock() {
+		return pthread_rwlock_rdlock(&lock_);
+	}
+
+	int wlock() {
+		return pthread_rwlock_wrlock(&lock_);
+	}
+
+	int rlock_t(uint64_t time_out_ms=0) {
+		struct timespec ts;
+		clock_gettime(CLOCK_REALTIME,&ts);
+		TsAddMs(&ts,time_out_ms);
+		return pthread_rwlock_timedrdlock(&lock_, &ts);
+	}
+
+	int wlock_t(uint64_t time_out_ms=0) {
+		struct timespec ts;
+		clock_gettime(CLOCK_REALTIME,&ts);
+		TsAddMs(&ts,time_out_ms);
+		return pthread_rwlock_timedwrlock(&lock_,&ts);
+	}
+
+	int ulock() {
+		return pthread_rwlock_unlock(&lock_);
+	}
 };
 
 class NullMutex {
